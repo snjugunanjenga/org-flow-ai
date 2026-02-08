@@ -6,22 +6,25 @@
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Backend-Supabase-3FCF8E?logo=supabase)](https://supabase.com)
+[![Challenge](https://img.shields.io/badge/Challenge%203-OpenAI%3A%20AI%20Chief%20of%20Staff-blueviolet)]()
+
+**🏆 4th Hack-Nation Global AI Hackathon · Challenge 3 – OpenAI: AI Chief of Staff**
+
+**🌐 Live Demo:** [https://org-ai-chief-of-staff.lovable.app](https://org-ai-chief-of-staff.lovable.app)
 
 ---
 
-## 🎯 Problem Statement
+## 🎯 The Problem
 
-Organizations suffer from **fragmented communication, lost decisions, and invisible conflicts**. Critical knowledge is trapped in silos, meetings go unrecorded, and leaders lack a single source of truth for what's happening across teams. The result: duplicated work, missed deadlines, and strategic misalignment.
+In fast-growing organizations, **critical knowledge is trapped in silos**. Decisions made in one meeting contradict plans from another. Engineers are left out of conversations that affect their work. Project managers juggle fragmented tools to track progress across teams. Leaders lack a single source of truth — leading to duplicated work, missed deadlines, and strategic misalignment.
 
-## 💡 Solution
+**40% of decisions made in meetings are never documented.** Cross-team dependencies go untracked until they cause deadline slips. Existing tools (Slack, Jira, Google Docs) create more silos rather than bridging them.
 
-Superhuman AI Chief of Staff is a **real-time organizational intelligence layer** that:
+## 💡 The Solution
 
-- **Ingests signals** from meetings, messages, and documents
-- **Extracts entities** (people, decisions, topics, dependencies) using AI
-- **Routes knowledge** to the right stakeholders automatically
-- **Detects conflicts** before they escalate
-- **Visualizes everything** in an interactive knowledge graph
+Superhuman AI Chief of Staff is a **real-time organizational intelligence layer** powered by a multi-agent AI system. It continuously monitors communication, extracts key entities, detects conflicts before they escalate, and routes the right knowledge to the right people at the right time.
+
+Think of it as an **always-on Chief of Staff** that never sleeps, never forgets, and always knows who needs to know what.
 
 ---
 
@@ -29,16 +32,16 @@ Superhuman AI Chief of Staff is a **real-time organizational intelligence layer*
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 **AI Agent System** | Four specialized agents (Memory, Router, Critic, Coordinator) work together to process organizational signals |
-| 🔗 **Knowledge Graph** | Interactive 3D visualization of people, topics, decisions, and their relationships |
-| 📅 **Google Calendar + Meet** | Full OAuth integration — sync events, create meetings with auto-generated Google Meet links |
+| 🤖 **Multi-Agent AI System** | Four specialized agents (Memory, Router, Critic, Coordinator) collaborate to process organizational signals |
+| 🔗 **Interactive Knowledge Graph** | 3D visualization of people, topics, decisions, and their relationships — making invisible dependencies visible |
+| 📅 **Google Calendar + Meet** | Full OAuth 2.0 integration — sync events, create meetings with auto-generated Google Meet links |
 | 💬 **Communication Hub** | Direct messaging, team channels, and cross-functional communication tracking |
-| 📊 **Analytics Dashboard** | Real-time metrics on team collaboration, sentiment analysis, and response times |
-| 🔍 **Conflict Detection** | AI-powered identification of contradictions, resource conflicts, and misaligned priorities |
+| 📊 **Analytics Dashboard** | Real-time metrics on collaboration scores, sentiment analysis, and response times |
+| 🔍 **AI Conflict Detection** | Proactive identification of contradictions, resource conflicts, and misaligned priorities |
 | 📁 **Document Storage** | Secure file uploads attached to projects, topics, and decisions |
-| 👥 **Multi-Tenant Orgs** | Role-based access control (Admin, Manager, Member) with team management |
+| 👥 **Multi-Tenant Organizations** | Role-based access control (Admin, Manager, Member) with team management |
 | 🔔 **Smart Notifications** | AI-routed alerts based on relevance scoring and stakeholder roles |
-| 🏗️ **Project Tracking** | Full CRUD for projects, milestones, and tasks with progress visualization |
+| 🏗️ **Project Tracking** | Projects, milestones, and tasks with progress visualization and AI-powered risk detection |
 
 ---
 
@@ -48,15 +51,16 @@ Superhuman AI Chief of Staff is a **real-time organizational intelligence layer*
 ┌─────────────────────────────────────────────────────┐
 │                   React Frontend                     │
 │  Dashboard · Graph · Calendar · Messages · Analytics │
+│  13 interactive views · Framer Motion animations     │
 └──────────────────────┬──────────────────────────────┘
-                       │
+                       │ HTTPS / WebSocket
               ┌────────┴────────┐
               │  Supabase Cloud  │
               │  ┌────────────┐  │
-              │  │ PostgreSQL │  │  ← RLS-protected, multi-tenant
-              │  │   Auth     │  │  ← Email + OAuth
+              │  │ PostgreSQL │  │  ← 22 tables, RLS-protected
+              │  │   Auth     │  │  ← Email + Google OAuth
               │  │  Storage   │  │  ← Document attachments
-              │  │Edge Funcs  │  │  ← AI agents, Calendar sync, Proxies
+              │  │Edge Funcs  │  │  ← 6 serverless functions
               │  └────────────┘  │
               └────────┬────────┘
                        │
@@ -68,18 +72,44 @@ Superhuman AI Chief of Staff is a **real-time organizational intelligence layer*
    └─────────┘  └─────────────┘  └────────┘
 ```
 
+### Data Flow
+
+1. **Ingestion** — Messages, meeting transcripts, and documents flow into the system
+2. **Processing** — Memory Agent extracts entities and generates embeddings
+3. **Storage** — Structured data → PostgreSQL, relationships → Neo4j, embeddings → Pinecone
+4. **Analysis** — Critic Agent detects conflicts, Router Agent identifies stakeholders
+5. **Visualization** — Knowledge graph renders organizational relationships in 3D
+6. **Interaction** — Users query via AI chat, Coordinator orchestrates agent responses
+
+---
+
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React 18 · TypeScript · Vite · Tailwind CSS · Framer Motion |
-| **UI Components** | shadcn/ui · Radix Primitives · Recharts |
-| **Backend** | Supabase (PostgreSQL, Edge Functions, Storage, Auth) |
-| **AI** | Lovable AI Gateway (Gemini, GPT-5) · OpenAI Embeddings |
-| **Graph DB** | Neo4j Aura (organizational knowledge graph) |
-| **Vector DB** | Pinecone (semantic search & memory) |
-| **Calendar** | Google Calendar API · Google Meet (OAuth 2.0) |
-| **Testing** | Vitest |
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Framer Motion | Interactive UI with 13 dashboard views |
+| **UI Library** | shadcn/ui, Radix Primitives, Recharts | Accessible components and data visualization |
+| **Backend** | Supabase (PostgreSQL, Edge Functions, Auth, Storage) | Multi-tenant data layer with Row Level Security |
+| **AI Processing** | Lovable AI Gateway (Gemini, GPT-5) | Entity extraction, conflict detection, summarization |
+| **Knowledge Graph** | Neo4j Aura | Organizational relationship mapping and traversal |
+| **Semantic Memory** | Pinecone + OpenAI Embeddings | Contextual search and similarity matching |
+| **Calendar** | Google Calendar API + OAuth 2.0 | Event sync and Google Meet creation |
+| **Testing** | Vitest | Unit and integration testing |
+
+---
+
+## 🤖 AI Agent System
+
+The platform's core innovation is a **multi-agent AI architecture** where four specialized agents collaborate:
+
+| Agent | Color | Role |
+|-------|-------|------|
+| **Memory Agent** | 🔵 Blue | Extracts entities (people, topics, decisions) from signals, generates embeddings, updates the knowledge graph |
+| **Router Agent** | 🟢 Green | Scores relevance using semantic similarity and role context, routes notifications to the right stakeholders |
+| **Critic Agent** | 🔴 Red | Detects conflicts, contradictions, and communication silos using cross-referencing and semantic comparison |
+| **Coordinator Agent** | 🟣 Purple | User-facing orchestrator — handles natural language queries, generates executive summaries, manages agent workflows |
+
+All agents expose their reasoning via collapsible "thinking" panels with color-coded typewriter animations, showing retrieved memories, graph paths, and conflict reasoning with source references.
 
 ---
 
@@ -108,11 +138,11 @@ The app runs at `http://localhost:5173` by default.
 
 ### Demo Access
 
-Click **"Try the Demo"** on the landing page to explore with pre-seeded data (requires seed data to be loaded).
+Click **"Try the Demo"** on the landing page to explore with pre-seeded organizational data.
 
 ---
 
-## 🔑 Environment Variables
+## 🔑 Environment & Secrets
 
 The `.env` file is auto-managed by Lovable Cloud. Required backend secrets:
 
@@ -129,22 +159,16 @@ The `.env` file is auto-managed by Lovable Cloud. Required backend secrets:
 
 ---
 
-## 📅 Google Calendar Setup
+## 📅 Google Calendar + Meet Setup
 
-To enable Google Calendar + Meet integration:
-
-1. **Create OAuth Credentials** in [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-2. **Enable APIs**: Google Calendar API
-3. **Configure OAuth Consent Screen**:
-   - Add your domain(s) to Authorized Domains
-   - Add scopes: `calendar.readonly`, `calendar.events`
-   - **If in "Testing" mode**: Add your email as a test user
-4. **Add Authorized Redirect URIs**:
-   - `https://<your-preview-domain>/dashboard/calendar`
-   - `https://<your-published-domain>/dashboard/calendar`
+1. Create **OAuth 2.0 Credentials** in [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Enable the **Google Calendar API**
+3. Configure the **OAuth Consent Screen** — add test users if in Testing mode
+4. Add **Authorized Redirect URIs**:
+   - `https://<your-domain>/dashboard/calendar`
 5. Store `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as backend secrets
 
-> ⚠️ **Common 403 Error**: If you get a 403 when clicking "Connect Google Calendar", ensure your redirect URI is whitelisted AND your email is added as a test user in Google Cloud Console (if the app is in Testing mode).
+> ⚠️ **Common 403 Error**: Ensure your redirect URI is whitelisted AND your email is added as a test user in Google Cloud Console (if app is in Testing mode).
 
 ---
 
@@ -153,21 +177,21 @@ To enable Google Calendar + Meet integration:
 ```
 src/
 ├── components/
-│   ├── calendar/        # Calendar grid & event form
+│   ├── calendar/        # Calendar grid, event form
 │   ├── dashboard/       # Layout, sidebar, AI chat agent
 │   ├── landing/         # Hero, value props, persona cards
-│   └── ui/              # shadcn/ui component library
+│   └── ui/              # shadcn/ui component library (50+ components)
 ├── contexts/            # Auth context provider
 ├── hooks/               # Custom hooks (org-id, google-calendar, toast)
 ├── pages/
-│   ├── dashboard/       # All dashboard views (13 views)
-│   └── ...              # Auth, onboarding, landing
-├── integrations/        # Supabase client & types (auto-generated)
+│   ├── dashboard/       # 13 dashboard views
+│   └── ...              # Auth, onboarding, landing, accept-invite
+├── integrations/        # Supabase client & auto-generated types
 └── lib/                 # Utility functions
 
 supabase/
 ├── functions/
-│   ├── ai-agent/        # AI coordinator, entity extraction
+│   ├── ai-agent/        # AI coordinator & entity extraction
 │   ├── calendar-sync/   # Google Calendar OAuth & sync
 │   ├── neo4j-proxy/     # Graph database proxy
 │   ├── pinecone-proxy/  # Vector database proxy
@@ -176,59 +200,68 @@ supabase/
 ├── migrations/          # Database schema migrations
 └── config.toml          # Edge function configuration
 
-docs/                    # Architecture, API, database, and submission docs
+docs/                    # Architecture, agents, API, database, submission docs
 ```
-
----
-
-## 🤖 AI Agent System
-
-The platform employs four specialized AI agents:
-
-| Agent | Role |
-|-------|------|
-| **Memory Agent** | Extracts entities (people, topics, decisions) and updates the knowledge graph |
-| **Router Agent** | Scores relevance and routes notifications to the right stakeholders |
-| **Critic Agent** | Detects conflicts, contradictions, and communication silos |
-| **Coordinator Agent** | Generates executive summaries and orchestrates agent workflows |
 
 ---
 
 ## 🔒 Security
 
-- **Row Level Security (RLS)** on all tables — users only see their organization's data
-- **Multi-tenant isolation** via `org_id` on every table
-- **OAuth tokens** encrypted and stored per-user in `google_oauth_tokens`
-- **Edge functions** authenticate via JWT before processing requests
+- **Row Level Security (RLS)** on all 22 tables — users only see their organization's data
+- **Multi-tenant isolation** via `org_id` scoping at the database level
+- **OAuth tokens** encrypted and stored per-user with automatic refresh
+- **Edge functions** authenticate via JWT before processing any request
 - **Role-based access**: Admin, Manager, Member with policy enforcement
+- **No hardcoded secrets** — all API keys stored in secure backend vault
+
+---
+
+## 📊 What We Built (Results & Impact)
+
+- **22 database tables** with comprehensive RLS policies for secure multi-tenant operation
+- **6 Edge Functions** powering AI agents, calendar sync, graph proxy, vector search, invitations, and demo seeding
+- **13 dashboard views**: Overview, Graph, Agents, Messages, Topics, Teams, Projects, Oversight, Notifications, Analytics, Settings, Calendar, Direct Messages
+- **4 AI agents** (Memory, Router, Critic, Coordinator) with logged activity and reasoning chains
+- **Full Google Calendar + Meet integration** with OAuth token management and automatic refresh
+- **Real-time collaboration** with direct messaging and team communication channels
+- **50+ UI components** built with shadcn/ui and Radix Primitives
 
 ---
 
 ## 📖 Documentation
 
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Database Schema](./docs/DATABASE.md)
-- [Agent System](./docs/AGENTS.md)
-- [API Reference](./docs/API.md)
-- [Testing Strategy](./docs/TESTING.md)
-- [Seed Data](./docs/SEED-DATA.md)
-- [Risks & Mitigations](./docs/RISKS.md)
-- [Deployment](./docs/DEPLOYMENT.md)
-- [Roadmap](./docs/ROADMAP.md)
-- [Implementation Plan](./docs/PLAN.md)
-- [Hackathon Submission](./docs/SUBMISSION.md)
+| Document | Description |
+|----------|-------------|
+| [Architecture](./docs/ARCHITECTURE.md) | System diagram and design decisions |
+| [Database Schema](./docs/DATABASE.md) | Complete table definitions and relationships |
+| [Agent System](./docs/AGENTS.md) | AI agent pipelines and reasoning display |
+| [API Reference](./docs/API.md) | Edge function endpoints and parameters |
+| [Testing Strategy](./docs/TESTING.md) | Test approach and coverage |
+| [Seed Data](./docs/SEED-DATA.md) | Demo data structure |
+| [Risks & Mitigations](./docs/RISKS.md) | Risk assessment |
+| [Deployment](./docs/DEPLOYMENT.md) | Deployment guide |
+| [Roadmap](./docs/ROADMAP.md) | Future development plans |
+| [Submission](./docs/SUBMISSION.md) | Hackathon submission details |
 
 ---
 
-## 🏆 Hackathon
+## 🏆 Hackathon: Challenge 3 – OpenAI: AI Chief of Staff
 
-This project was built for the **Global AI Hackathon (Hack-Nation 4th Edition)**. It addresses all 5 core hackathon scenarios:
+This project was built for the **4th Hack-Nation Global AI Hackathon**. It directly addresses **Challenge 3: AI Chief of Staff** and covers all 5 core scenarios:
 
-1. **Overwhelmed Founder** → AI surfaces what matters across all teams
-2. **Left-Out IC** → Router Agent ensures no one is left behind
-3. **Cross-Team PM** → Knowledge graph reveals dependencies and conflicts
-4. **Communication Gaps** → Critic Agent flags silos and contradictions
-5. **Decision Tracking** → Version-stamped knowledge base with full history
+| Scenario | How We Solve It |
+|----------|----------------|
+| **Overwhelmed Founder** | Coordinator Agent generates executive briefings surfacing what matters |
+| **Left-Out IC** | Router Agent ensures no one is left behind with relevance-scored notifications |
+| **Cross-Team PM** | Knowledge graph reveals dependencies, conflicts, and blockers across teams |
+| **Communication Gaps** | Critic Agent flags silos, contradictions, and stalled projects |
+| **Decision Tracking** | Version-stamped knowledge base with full history and audit trail |
+
+---
+
+## 🏷️ Technologies & Tags
+
+`React` · `TypeScript` · `Tailwind CSS` · `Supabase` · `PostgreSQL` · `Neo4j` · `Pinecone` · `OpenAI` · `Google Calendar API` · `OAuth 2.0` · `Framer Motion` · `Vite` · `Edge Functions` · `Multi-Agent AI` · `Knowledge Graph` · `Semantic Search` · `RLS` · `Multi-Tenant`
 
 ---
 
