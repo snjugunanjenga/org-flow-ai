@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrgId } from "@/hooks/use-org-id";
-import { Network } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface GraphEdge {
   id: string;
@@ -29,35 +29,39 @@ const typeBorders: Record<string, string> = {
   meeting: "border-[hsl(var(--graph-node-meeting))]",
 };
 
+interface NodeInfo {
+  type: string;
+  label: string;
+  connections: number;
+  relatedEdges: GraphEdge[];
+}
+
 export default function GraphView() {
   const orgId = useOrgId();
   const [edges, setEdges] = useState<GraphEdge[]>([]);
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedNode, setSelectedNode] = useState<NodeInfo | null>(null);
 
   useEffect(() => {
     if (!orgId) return;
-    supabase
-      .from("graph_edges")
-      .select("*")
-      .eq("org_id", orgId)
-      .then(({ data }) => setEdges(data || []));
+    supabase.from("graph_edges").select("*").eq("org_id", orgId).then(({ data }) => setEdges(data || []));
   }, [orgId]);
 
-  // Build unique nodes
-  const nodesMap = new Map<string, { type: string; label: string; connections: number }>();
+  const nodesMap = new Map<string, NodeInfo>();
   edges.forEach(e => {
     const sKey = `${e.source_type}:${e.source_label}`;
     const tKey = `${e.target_type}:${e.target_label}`;
-    if (!nodesMap.has(sKey)) nodesMap.set(sKey, { type: e.source_type, label: e.source_label, connections: 0 });
-    if (!nodesMap.has(tKey)) nodesMap.set(tKey, { type: e.target_type, label: e.target_label, connections: 0 });
+    if (!nodesMap.has(sKey)) nodesMap.set(sKey, { type: e.source_type, label: e.source_label, connections: 0, relatedEdges: [] });
+    if (!nodesMap.has(tKey)) nodesMap.set(tKey, { type: e.target_type, label: e.target_label, connections: 0, relatedEdges: [] });
     nodesMap.get(sKey)!.connections++;
+    nodesMap.get(sKey)!.relatedEdges.push(e);
     nodesMap.get(tKey)!.connections++;
+    nodesMap.get(tKey)!.relatedEdges.push(e);
   });
 
   const nodes = Array.from(nodesMap.values()).sort((a, b) => b.connections - a.connections);
   const filteredNodes = selectedType === "all" ? nodes : nodes.filter(n => n.type === selectedType);
   const filteredEdges = selectedType === "all" ? edges : edges.filter(e => e.source_type === selectedType || e.target_type === selectedType);
-
   const types = ["all", ...new Set(nodes.map(n => n.type))];
 
   return (
@@ -69,19 +73,12 @@ export default function GraphView() {
 
       <div className="flex gap-2 flex-wrap">
         {types.map(t => (
-          <button
-            key={t}
-            onClick={() => setSelectedType(t)}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors capitalize ${
-              selectedType === t ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
+          <button key={t} onClick={() => setSelectedType(t)} className={`px-3 py-1.5 text-sm rounded-lg transition-colors capitalize ${selectedType === t ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
             {t}
           </button>
         ))}
       </div>
 
-      {/* Legend */}
       <div className="flex gap-4 flex-wrap">
         {Object.entries(typeColors).map(([type, color]) => (
           <div key={type} className="flex items-center gap-1.5">
@@ -91,21 +88,19 @@ export default function GraphView() {
         ))}
       </div>
 
-      {/* Node grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {filteredNodes.map((node, i) => (
-          <div key={i} className={`glass-panel p-4 border-l-4 ${typeBorders[node.type] || "border-border"}`}>
+          <button key={i} onClick={() => setSelectedNode(node)} className={`glass-panel p-4 border-l-4 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer ${typeBorders[node.type] || "border-border"}`}>
             <div className="flex items-center gap-2 mb-1">
               <div className={`w-2 h-2 rounded-full ${typeColors[node.type] || "bg-muted"}`} />
               <span className="text-xs uppercase text-muted-foreground">{node.type}</span>
             </div>
             <h4 className="text-sm font-semibold">{node.label}</h4>
             <p className="text-[10px] text-muted-foreground mt-1">{node.connections} connections</p>
-          </div>
+          </button>
         ))}
       </div>
 
-      {/* Relationships */}
       <div className="glass-panel p-6">
         <h3 className="text-lg font-semibold font-display mb-4">Relationships ({filteredEdges.length})</h3>
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -120,6 +115,40 @@ export default function GraphView() {
           ))}
         </div>
       </div>
+
+      {/* Node detail dialog */}
+      <Dialog open={!!selectedNode} onOpenChange={() => setSelectedNode(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${typeColors[selectedNode?.type || ""] || "bg-muted"}`} />
+              {selectedNode?.label}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedNode && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Type:</span> <span className="capitalize ml-1">{selectedNode.type}</span></div>
+                <div><span className="text-muted-foreground">Connections:</span> <span className="ml-1">{selectedNode.connections}</span></div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Related Relationships</h4>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {selectedNode.relatedEdges.map(e => (
+                    <div key={e.id} className="flex items-center gap-2 text-sm p-2 rounded bg-muted/30">
+                      <span className={`w-2 h-2 rounded-full ${typeColors[e.source_type] || "bg-muted"}`} />
+                      <span>{e.source_label}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">{e.relationship}</span>
+                      <span className={`w-2 h-2 rounded-full ${typeColors[e.target_type] || "bg-muted"}`} />
+                      <span>{e.target_label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
