@@ -22,12 +22,6 @@ export function useGoogleCalendar() {
     if (!user) return;
     setState(s => ({ ...s, loading: true }));
     try {
-      const { data, error } = await supabase.functions.invoke("calendar-sync", {
-        body: {},
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      // Use query param approach via fetch
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calendar-sync?action=check-connection`,
         {
