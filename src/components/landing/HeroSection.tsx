@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ParticleGraph } from "./ParticleGraph";
 import { ArrowRight, Play } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const subtitles = [
   "Tracking every decision across your org",
@@ -54,17 +55,22 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.45 }}
         >
-          <Button size="lg" className="text-base px-8 py-6 rounded-xl bg-primary hover:bg-primary/90 shadow-lg">
-            Get Started
-            <ArrowRight className="ml-2 h-5 w-5" />
+          <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl bg-primary hover:bg-primary/90 shadow-lg">
+            <Link to="/auth">
+              Get Started
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
           </Button>
           <Button
+            asChild
             size="lg"
             variant="outline"
             className="text-base px-8 py-6 rounded-xl border-border/50 bg-card/30 backdrop-blur-sm hover:bg-card/50"
           >
-            <Play className="mr-2 h-5 w-5" />
-            Try the Demo
+            <Link to="/auth">
+              <Play className="mr-2 h-5 w-5" />
+              Try the Demo
+            </Link>
           </Button>
         </motion.div>
       </div>
