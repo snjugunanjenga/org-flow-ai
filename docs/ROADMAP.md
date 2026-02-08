@@ -1,0 +1,49 @@
+# Roadmap
+
+## Phase 1: MVP (Current)
+- [x] Project documentation
+- [ ] Landing page with 3D background
+- [ ] Auth & multi-tenant architecture
+- [ ] Team & role management
+- [ ] Database schema & seed data
+- [ ] Dashboard shell with navigation
+
+## Phase 2: Intelligence Layer
+- [ ] Neo4j knowledge graph integration
+- [ ] Pinecone vector DB + embeddings
+- [ ] Multi-agent system (Memory, Router, Critic, Coordinator)
+- [ ] Agent reasoning display
+
+## Phase 3: Integrations
+- [ ] Slack connector (real + simulated)
+- [ ] Gmail connector (real + simulated)
+- [ ] Google Calendar connector (real + simulated)
+- [ ] Meeting transcript pipeline
+
+## Phase 4: Advanced Features
+- [ ] Voice interaction (OpenAI Realtime API)
+- [ ] Project tracking with agent-generated updates
+- [ ] Manager communication oversight
+- [ ] Caching layer (React Query + Edge Function)
+
+## Phase 5: Quality & Polish
+- [ ] Vitest unit/integration tests (80% coverage)
+- [ ] Playwright E2E tests
+- [ ] GitHub Actions CI/CD
+- [ ] Dark theme, glassmorphism, animations
+- [ ] Demo mode with scripted scenarios
+- [ ] Mobile responsive + PWA
+
+## Scaling Considerations
+- Neo4j cluster for graph query throughput
+- Pinecone pod scaling for embedding volume
+- Edge function concurrency limits
+- PostgreSQL connection pooling
+- CDN for static assets
+
+## Monitoring
+- Edge function error rates and latency
+- Neo4j query performance
+- Pinecone query latency and index fullness
+- Agent response quality metrics
+- User engagement analytics
