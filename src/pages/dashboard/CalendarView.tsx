@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgId } from "@/hooks/use-org-id";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarDays, Plus, Video, Clock, Trash2, Pencil } from "lucide-react";
+import { useGoogleCalendar } from "@/hooks/use-google-calendar";
+import { CalendarDays, Plus, Video, Clock, Trash2, RefreshCw, LogIn, LogOut } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CalendarGrid } from "@/components/calendar/CalendarGrid";
+import { CalendarEventForm } from "@/components/calendar/CalendarEventForm";
 
 interface CalendarEvent {
   id: string;
@@ -27,54 +30,40 @@ export default function CalendarView() {
   const { user } = useAuth();
   const orgId = useOrgId();
   const { toast } = useToast();
+  const google = useGoogleCalendar();
+
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showCreate, setShowCreate] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [form, setForm] = useState({
-    title: "", description: "", start_time: "", end_time: "",
-    location: "", meet_link: "", event_type: "meeting", attendees: "",
-  });
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     if (!orgId) return;
     const { data } = await supabase.from("calendar_events").select("*").eq("org_id", orgId).order("start_time");
     setEvents((data as CalendarEvent[]) || []);
-  };
+  }, [orgId]);
 
-  useEffect(() => { loadEvents(); }, [orgId]);
+  // Check Google connection + handle OAuth callback
+  useEffect(() => {
+    google.checkConnection();
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      window.history.replaceState({}, "", window.location.pathname);
+      google.exchangeCode(code).then((success) => {
+        if (success && orgId) {
+          google.syncEvents(orgId).then(() => loadEvents());
+        }
+      });
+    }
+  }, []);
+
+  useEffect(() => { loadEvents(); }, [loadEvents]);
 
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
   const firstDayOffset = startOfMonth(currentMonth).getDay();
-
   const getEventsForDay = (date: Date) => events.filter(e => isSameDay(new Date(e.start_time), date));
-
-  const generateMeetLink = () => {
-    const code = Math.random().toString(36).substring(2, 12);
-    setForm(f => ({ ...f, meet_link: `https://meet.google.com/${code.slice(0,3)}-${code.slice(3,7)}-${code.slice(7)}` }));
-  };
-
-  const handleCreate = async () => {
-    if (!orgId || !user || !form.title.trim() || !form.start_time || !form.end_time) return;
-    const { error } = await supabase.from("calendar_events").insert({
-      org_id: orgId,
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      start_time: new Date(form.start_time).toISOString(),
-      end_time: new Date(form.end_time).toISOString(),
-      location: form.location.trim() || null,
-      meet_link: form.meet_link.trim() || null,
-      event_type: form.event_type,
-      created_by: user.id,
-      attendees: form.attendees.split(",").map(s => s.trim()).filter(Boolean),
-    });
-    if (error) { toast({ variant: "destructive", title: "Error", description: error.message }); return; }
-    toast({ title: "Event created" });
-    setShowCreate(false);
-    resetForm();
-    loadEvents();
-  };
 
   const handleDelete = async (id: string) => {
     await supabase.from("calendar_events").delete().eq("id", id);
@@ -83,71 +72,66 @@ export default function CalendarView() {
     loadEvents();
   };
 
-  const resetForm = () => setForm({ title: "", description: "", start_time: "", end_time: "", location: "", meet_link: "", event_type: "meeting", attendees: "" });
-
-  const openCreateForDate = (date: Date) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    setForm({ ...form, start_time: `${dateStr}T09:00`, end_time: `${dateStr}T10:00` });
-    setShowCreate(true);
+  const handleSync = async () => {
+    if (!orgId) return;
+    await google.syncEvents(orgId);
+    loadEvents();
   };
 
   const dayEvents = selectedDate ? getEventsForDay(selectedDate) : [];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-display">Calendar</h1>
-          <p className="text-muted-foreground mt-1">Schedule meetings, plan tasks, and create Google Meet links.</p>
+          <p className="text-muted-foreground mt-1">Schedule meetings and sync with Google Calendar.</p>
         </div>
-        <Button size="sm" onClick={() => { resetForm(); setShowCreate(true); }}><Plus className="h-4 w-4 mr-1" /> New Event</Button>
+        <div className="flex items-center gap-2">
+          {google.connected ? (
+            <>
+              <Button size="sm" variant="outline" onClick={handleSync} disabled={google.syncing}>
+                <RefreshCw className={`h-4 w-4 mr-1 ${google.syncing ? "animate-spin" : ""}`} />
+                {google.syncing ? "Syncing…" : "Sync Google"}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={google.disconnect}>
+                <LogOut className="h-4 w-4 mr-1" /> Disconnect
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" variant="outline" onClick={google.startOAuth} disabled={google.loading}>
+              <LogIn className="h-4 w-4 mr-1" /> Connect Google Calendar
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-1" /> New Event
+          </Button>
+        </div>
       </div>
 
-      {/* Calendar grid */}
-      <div className="glass-panel p-6">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="text-sm text-muted-foreground hover:text-foreground">← Prev</button>
-          <h3 className="text-lg font-semibold font-display">{format(currentMonth, "MMMM yyyy")}</h3>
-          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="text-sm text-muted-foreground hover:text-foreground">Next →</button>
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-            <div key={d} className="text-center text-xs text-muted-foreground font-medium py-2">{d}</div>
-          ))}
-          {Array.from({ length: firstDayOffset }).map((_, i) => <div key={`empty-${i}`} />)}
-          {days.map(day => {
-            const dayEvts = getEventsForDay(day);
-            const isToday = isSameDay(day, new Date());
-            const isSelected = selectedDate && isSameDay(day, selectedDate);
-            return (
-              <button
-                key={day.toISOString()}
-                onClick={() => setSelectedDate(day)}
-                onDoubleClick={() => openCreateForDate(day)}
-                className={`p-2 min-h-[72px] text-left rounded-lg border transition-all text-xs ${
-                  isSelected ? "border-primary bg-primary/10" : isToday ? "border-accent/50 bg-accent/5" : "border-border/30 hover:bg-muted/30"
-                }`}
-              >
-                <span className={`font-medium ${isToday ? "text-accent" : ""}`}>{format(day, "d")}</span>
-                {dayEvts.slice(0, 2).map(e => (
-                  <div key={e.id} className="mt-0.5 px-1 py-0.5 rounded bg-primary/10 text-primary truncate text-[10px]" onClick={(ev) => { ev.stopPropagation(); setSelectedEvent(e); }}>
-                    {e.meet_link && <Video className="h-2.5 w-2.5 inline mr-0.5" />}
-                    {e.title}
-                  </div>
-                ))}
-                {dayEvts.length > 2 && <span className="text-[10px] text-muted-foreground">+{dayEvts.length - 2} more</span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Calendar Grid */}
+      <CalendarGrid
+        currentMonth={currentMonth}
+        days={days}
+        firstDayOffset={firstDayOffset}
+        selectedDate={selectedDate}
+        getEventsForDay={getEventsForDay}
+        onSelectDate={setSelectedDate}
+        onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
+        onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
+        onSelectEvent={setSelectedEvent}
+        onCreateForDate={(date) => setShowCreate(true)}
+      />
 
       {/* Day events sidebar */}
       {selectedDate && (
         <div className="glass-panel p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold font-display">{format(selectedDate, "EEEE, MMMM d")}</h3>
-            <Button size="sm" variant="outline" onClick={() => openCreateForDate(selectedDate)}><Plus className="h-3 w-3 mr-1" /> Add</Button>
+            <Button size="sm" variant="outline" onClick={() => setShowCreate(true)}>
+              <Plus className="h-3 w-3 mr-1" /> Add
+            </Button>
           </div>
           {dayEvents.length === 0 ? (
             <p className="text-sm text-muted-foreground">No events scheduled.</p>
@@ -215,7 +199,9 @@ export default function CalendarView() {
                 </a>
               )}
               {selectedEvent.created_by === user?.id && (
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedEvent.id)}><Trash2 className="h-3 w-3 mr-1" /> Delete Event</Button>
+                <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedEvent.id)}>
+                  <Trash2 className="h-3 w-3 mr-1" /> Delete Event
+                </Button>
               )}
             </div>
           )}
@@ -223,47 +209,15 @@ export default function CalendarView() {
       </Dialog>
 
       {/* Create event dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>New Event</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Title</label>
-              <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Meeting title" className="bg-secondary/50" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
-              <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Optional description" className="bg-secondary/50" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Start</label>
-                <Input type="datetime-local" value={form.start_time} onChange={e => setForm({ ...form, start_time: e.target.value })} className="bg-secondary/50" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">End</label>
-                <Input type="datetime-local" value={form.end_time} onChange={e => setForm({ ...form, end_time: e.target.value })} className="bg-secondary/50" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Location</label>
-              <Input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="Room or virtual" className="bg-secondary/50" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Google Meet Link</label>
-                <Button variant="ghost" size="sm" onClick={generateMeetLink} className="text-xs"><Video className="h-3 w-3 mr-1" /> Generate Link</Button>
-              </div>
-              <Input value={form.meet_link} onChange={e => setForm({ ...form, meet_link: e.target.value })} placeholder="https://meet.google.com/..." className="bg-secondary/50" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Attendees (comma-separated)</label>
-              <Input value={form.attendees} onChange={e => setForm({ ...form, attendees: e.target.value })} placeholder="john@company.com, jane@company.com" className="bg-secondary/50" />
-            </div>
-            <Button className="w-full" onClick={handleCreate}>Create Event</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CalendarEventForm
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        orgId={orgId}
+        googleConnected={google.connected}
+        onCreated={loadEvents}
+        createMeetEvent={google.createMeetEvent}
+        selectedDate={selectedDate}
+      />
     </div>
   );
 }
