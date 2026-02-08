@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.ai-agent]
 verify_jwt = false
+
+[functions.neo4j-proxy]
+verify_jwt = false
+
+[functions.pinecone-proxy]
+verify_jwt = false
