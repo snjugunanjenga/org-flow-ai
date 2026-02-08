@@ -21,6 +21,8 @@ import OversightView from "./pages/dashboard/OversightView";
 import NotificationsView from "./pages/dashboard/NotificationsView";
 import AnalyticsView from "./pages/dashboard/AnalyticsView";
 import SettingsView from "./pages/dashboard/SettingsView";
+import CalendarView from "./pages/dashboard/CalendarView";
+import DirectMessagesView from "./pages/dashboard/DirectMessagesView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +58,8 @@ const App = () => (
               <Route path="notifications" element={<NotificationsView />} />
               <Route path="analytics" element={<AnalyticsView />} />
               <Route path="settings" element={<SettingsView />} />
+              <Route path="calendar" element={<CalendarView />} />
+              <Route path="dm" element={<DirectMessagesView />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,10 +1,9 @@
 import { 
   LayoutDashboard, Users, FolderKanban, MessageSquare, 
   Network, Brain, AlertTriangle, Bell, Settings, 
-  BarChart3, Eye, LogOut, FlaskConical
+  BarChart3, Eye, LogOut, FlaskConical, CalendarDays, MessageCircle
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -38,6 +37,8 @@ const mainNav = [
 const orgNav = [
   { title: "Teams", url: "/dashboard/teams", icon: Users },
   { title: "Projects", url: "/dashboard/projects", icon: FolderKanban },
+  { title: "Direct Messages", url: "/dashboard/dm", icon: MessageCircle },
+  { title: "Calendar", url: "/dashboard/calendar", icon: CalendarDays },
   { title: "Oversight", url: "/dashboard/oversight", icon: Eye },
 ];
 

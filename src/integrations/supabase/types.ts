@@ -58,6 +58,62 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          attendees: string[] | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string
+          event_type: string | null
+          id: string
+          location: string | null
+          meet_link: string | null
+          org_id: string
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attendees?: string[] | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time: string
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          meet_link?: string | null
+          org_id: string
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attendees?: string[] | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          meet_link?: string | null
+          org_id?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication_logs: {
         Row: {
           avg_response_time_mins: number | null
@@ -148,6 +204,104 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "conflicts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_team_message: boolean | null
+          org_id: string
+          read: boolean | null
+          recipient_id: string | null
+          sender_id: string
+          team_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_team_message?: boolean | null
+          org_id: string
+          read?: boolean | null
+          recipient_id?: string | null
+          sender_id: string
+          team_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_team_message?: boolean | null
+          org_id?: string
+          read?: boolean | null
+          recipient_id?: string | null
+          sender_id?: string
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          org_id: string
+          resource_id: string
+          resource_type: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          org_id: string
+          resource_id: string
+          resource_type: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          org_id?: string
+          resource_id?: string
+          resource_type?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_attachments_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
