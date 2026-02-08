@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrgId } from "@/hooks/use-org-id";
 import { Bell, CheckCircle, AlertTriangle, Info, X } from "lucide-react";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Notification {
   id: string;
@@ -26,6 +27,7 @@ export default function NotificationsView() {
   const { user } = useAuth();
   const orgId = useOrgId();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -34,7 +36,7 @@ export default function NotificationsView() {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => setNotifications(data || []));
+      .then(({ data }) => setNotifications((data as Notification[]) || []));
   }, [user]);
 
   const markRead = async (id: string) => {
@@ -43,7 +45,6 @@ export default function NotificationsView() {
   };
 
   const unread = notifications.filter(n => !n.read);
-  const read = notifications.filter(n => n.read);
 
   return (
     <div className="space-y-6">
@@ -60,7 +61,11 @@ export default function NotificationsView() {
           const config = typeConfig[n.type] || typeConfig.info;
           const Icon = config.icon;
           return (
-            <div key={n.id} className={`glass-panel p-4 transition-all ${!n.read ? "ring-1 ring-primary/20" : "opacity-70"}`}>
+            <button
+              key={n.id}
+              onClick={() => { setSelectedNotif(n); if (!n.read) markRead(n.id); }}
+              className={`glass-panel p-4 w-full text-left transition-all hover:ring-1 hover:ring-primary/30 cursor-pointer ${!n.read ? "ring-1 ring-primary/20" : "opacity-70"}`}
+            >
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg shrink-0 ${config.color}`}>
                   <Icon className="h-4 w-4" />
@@ -68,28 +73,15 @@ export default function NotificationsView() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="text-sm font-semibold">{n.title}</h4>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] text-muted-foreground">
-                        {format(new Date(n.created_at), "MMM d, h:mm a")}
-                      </span>
-                      {!n.read && (
-                        <button onClick={() => markRead(n.id)} className="text-muted-foreground hover:text-foreground">
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
+                    <span className="text-[10px] text-muted-foreground shrink-0">
+                      {format(new Date(n.created_at), "MMM d, h:mm a")}
+                    </span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{n.body}</p>
-                  {n.reasoning && (
-                    <div className="mt-2 p-2 rounded bg-muted/50 border border-border/30">
-                      <p className="text-[10px] text-muted-foreground">
-                        <span className="font-semibold capitalize">{n.source_agent} Agent:</span> {n.reasoning}
-                      </p>
-                    </div>
-                  )}
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{n.body}</p>
+                  {n.source_agent && <p className="text-[10px] text-primary/60 mt-1">via {n.source_agent} Agent</p>}
                 </div>
               </div>
-            </div>
+            </button>
           );
         })}
         {notifications.length === 0 && (
@@ -99,6 +91,31 @@ export default function NotificationsView() {
           </div>
         )}
       </div>
+
+      {/* Notification detail dialog */}
+      <Dialog open={!!selectedNotif} onOpenChange={() => setSelectedNotif(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{selectedNotif?.title}</DialogTitle></DialogHeader>
+          {selectedNotif && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Type:</span> <span className="capitalize ml-1">{selectedNotif.type}</span></div>
+                <div><span className="text-muted-foreground">Date:</span> <span className="ml-1">{format(new Date(selectedNotif.created_at), "PPp")}</span></div>
+                {selectedNotif.source_agent && <div className="col-span-2"><span className="text-muted-foreground">Source Agent:</span> <span className="capitalize ml-1">{selectedNotif.source_agent}</span></div>}
+              </div>
+              <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
+                <p className="text-sm whitespace-pre-wrap">{selectedNotif.body}</p>
+              </div>
+              {selectedNotif.reasoning && (
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <h4 className="text-xs font-semibold text-primary uppercase mb-1">💭 AI Reasoning</h4>
+                  <p className="text-sm whitespace-pre-wrap">{selectedNotif.reasoning}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -120,10 +120,10 @@ export function AIChatAgent() {
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={toggleEnabled} className="text-muted-foreground hover:text-destructive transition-colors p-1" title="Opt out">
+                <button onClick={toggleEnabled} className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-muted/50" title="Opt out of AI">
                   <Power className="h-3.5 w-3.5" />
                 </button>
-                <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+                <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/50" title="Close chat">
                   <X className="h-4 w-4" />
                 </button>
               </div>
