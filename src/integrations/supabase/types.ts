@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          org_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          org_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_memberships: {
         Row: {
           id: string
@@ -81,6 +125,7 @@ export type Database = {
           display_name: string | null
           id: string
           job_title: string | null
+          onboarding_completed: boolean
           updated_at: string
           user_id: string
         }
@@ -91,6 +136,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           job_title?: string | null
+          onboarding_completed?: boolean
           updated_at?: string
           user_id: string
         }
@@ -101,6 +147,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           job_title?: string | null
+          onboarding_completed?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -212,6 +259,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: { Args: { _token: string }; Returns: Json }
       has_org_role: {
         Args: {
           _org_id: string
