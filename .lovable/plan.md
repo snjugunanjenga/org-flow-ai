@@ -1,275 +1,163 @@
 
 
-# Superhuman AI Chief of Staff — Final Implementation Plan
+# Revised Onboarding, Demo, and Account Model
 
-All former "technical debt" items are now promoted to core implementation phases. This is the complete, production-ready plan.
+## Key Clarification from User
 
----
-
-## Phase 1: Project Documentation (`/docs`)
-
-Create comprehensive project docs:
-- `README.md` — Vision, hackathon alignment, quick start
-- `ARCHITECTURE.md` — System diagram, data flow, tech decisions
-- `DATABASE.md` — Schema, RLS policies, pgvector + Pinecone setup
-- `AGENTS.md` — Memory, Router, Critic, Coordinator design
-- `API.md` — Edge functions, caching, Neo4j queries
-- `TESTING.md` — Vitest + Playwright strategy, CI/CD pipeline
-- `SEED-DATA.md` — Seed data structure and embeddings
-- `RISKS.md` — Risks and mitigations
-- `DEPLOYMENT.md` — Secrets, environment setup, GitHub Actions
-- `ROADMAP.md` - Project roadmap and scaling and monitoring
-- `PLAN.md` = Project workflow of phases to production
----
-
-## Phase 2: Landing Page
-
-- Hero with "Your AI Chief of Staff" headline and 3D particle graph background (Three.js)
-- Value propositions: Knowledge Graph, Multi-Agent Intelligence, Voice Interaction
-- How It Works: Ingest → Analyze → Visualize → Act (scroll-animated)
-- Persona cards: Overwhelmed Founder, Left-Out IC, Cross-Team PM
-- CTAs: "Get Started" (signup) and "Try the Demo" (pre-seeded org)
+- **Organization founders/managers** sign up with their own real email (e.g., `steve.jobs@acmecorp.com`)
+- **Members** also use their own real emails and are invited by managers
+- **Only one `admin@chiefofstaff.ai` account exists** -- this is the **platform superadmin** who oversees all organizations and subscriptions (not an org-level admin)
+- Demo mode still needed, but demo accounts should use realistic fictional emails, not `@chiefofstaff.ai` domain
 
 ---
 
-## Phase 3: Auth & Multi-Tenant Architecture
+## Changes from Previous Plan
 
-- Supabase Auth with email/password + Google OAuth
-- RBAC: `admin`, `manager`, `member` via `user_roles` table + `has_role()` function
-- `organizations` and `org_memberships` tables, all data scoped by `org_id` with RLS
-- Org switcher, auto-created profiles on signup
-
----
-
-## Phase 4: Team & Role Management
-
-- `teams` and `team_memberships` tables (manager-controlled)
-- People & Teams page: assign members to teams, change roles, bulk operations
-- Only managers/admins can modify — enforced via RLS
+| Previous Plan | Revised |
+|---|---|
+| Demo admin was `demo-admin@chiefofstaff.ai` | Demo admin is `admin@chiefofstaff.ai` (platform superadmin) |
+| All 10 demo accounts used `@chiefofstaff.ai` | Demo org members use realistic emails like `steve.jobs@apple.com` |
+| No platform admin concept | New `platform_admin` flag or role to distinguish platform-wide admin from org admins |
+| Org admins = highest role | Org admins manage their org; platform admin manages all orgs |
 
 ---
 
-## Phase 5: Neo4j Server-Side Knowledge Graph
+## Account Hierarchy
 
-**Replaces client-side graph state with a proper graph database.**
+```text
+Platform Admin (admin@chiefofstaff.ai)
+  Can view/manage ALL organizations
+  Manages subscriptions
+  Has platform-level "admin" role in user_roles
 
-- Neo4j instance for storing and querying the organizational knowledge graph
-- Supabase edge function as Neo4j proxy — handles Cypher queries securely
-- Graph data model: `(:Person)`, `(:Topic)`, `(:Decision)`, `(:Project)`, `(:Meeting)` nodes with typed relationships (`COMMUNICATED_WITH`, `DECIDED_ON`, `MENTIONED_IN`, `WORKS_ON`, `ATTENDED`)
-- Server-side graph computations: shortest path, community detection, centrality scores, knowledge flow paths
-- Client receives pre-computed graph layouts — drastically reduces browser load
-- react-force-graph-3d renders server-provided positions and relationships
-- Real-time sync: Supabase triggers push new data to Neo4j on insert/update
+Organization Founder/Admin (e.g. steve.jobs@apple.com)
+  Creates their org on signup
+  Invites team members
+  Has "admin" role in org_memberships for their org
 
----
+Organization Manager (e.g. mike@apple.com)
+  Manages teams within their org
+  Can invite members
+  Has "manager" role in org_memberships
 
-## Phase 6: Pinecone Vector DB + Embeddings
-
-**Production-grade semantic memory replacing pgvector for scale.**
-
-- Pinecone index for agent memory with `text-embedding-3-small` (1536 dimensions)
-- Namespace isolation per `org_id` for multi-tenant safety
-- Edge function handles embedding generation (OpenAI) and Pinecone upsert/query
-- Hybrid retrieval: Pinecone for semantic search + Supabase for structured metadata
-- `agent_memory` metadata stored in Supabase (id, org_id, key, agent_type, created_at) with Pinecone ID reference
-- Batch embedding pipeline for seed data ingestion
-- Relevance scoring with configurable similarity thresholds
+Organization Member (e.g. dev@apple.com)
+  Accepts invite, joins org
+  Has "member" role in org_memberships
+```
 
 ---
 
-## Phase 7: Database Schema & Seed Data
+## Implementation Steps
 
-### Tables (all org-scoped)
-- **people**, **teams**, **team_memberships**
-- **messages** (source_type: email/slack/meeting_transcript)
-- **meeting_transcripts** — full transcripts with participants, duration
-- **meeting_summaries** — AI-generated notes, key decisions, action items
-- **topics**, **graph_edges**, **knowledge_versions**
-- **conflicts** — Critic-flagged contradictions
-- **notifications**, **agent_logs**
-- **projects**, **project_milestones**, **project_tasks**, **project_updates**
-- **communication_logs** — aggregated patterns for manager oversight
+### 1. Database Migration
 
-### Seed Data
-- 1 demo org, 8 teams, ~150 people, ~2,000 messages, ~20 transcripts with summaries
-- 3-4 projects with milestones/tasks, pre-seeded conflicts
-- All embeddings pre-generated and loaded into Pinecone
+**Add `invitations` table:**
+- id, org_id, email, role (default: member), invited_by, token (uuid), status (pending/accepted/expired), created_at, expires_at (default: now() + 7 days)
+- RLS: org managers/admins can INSERT and SELECT; token-based lookup for accept flow
 
----
+**Add `onboarding_completed` column to `profiles`:**
+- Boolean, default false
+- Tracks whether a manager has completed the onboarding wizard
 
-## Phase 8: Caching Layer
+**Add `is_platform_admin` column to `user_roles`:**
+- Or simply: the platform admin has an `admin` entry in `user_roles` without an org scope. The existing `has_role(user_id, 'admin')` function already checks this table, so the platform admin can be identified by having a row in `user_roles` with role = `admin`.
 
-### React Query (client-side)
-- Graph: 30s stale / 5min gc; Activity: 10s / 2min; People/Projects: 5min / 30min
-- Optimistic updates, prefetching on hover
+### 2. Seed Demo Data Edge Function (`seed-demo-data`)
 
-### Edge Function Caching (server-side)
-- Cache-Control headers for stable data
-- In-memory cache keyed by `org_id + query_hash + time_bucket`
-- Neo4j query result caching (5min TTL for graph layouts)
-- Pinecone result caching for repeated semantic queries
-- Invalidation on new message/transcript ingestion
+Creates the full demo environment using the service role key:
 
----
+**Platform admin account:**
+- `admin@chiefofstaff.ai` / `pass123#` -- platform superadmin, has `admin` in `user_roles`
 
-## Phase 9: Real Integration Connectors (Slack, Gmail, Calendar)
+**Demo organization: "Apple" (slug: `appl`)**
 
-**Real OAuth connectors — user provides API credentials later.**
+Created by a demo founder account:
+- `steve.jobs@apple.com` / `pass123#` -- org admin
 
-### Slack Integration
-- OAuth 2.0 flow via edge function (Bot Token Scopes: channels:history, users:read)
-- Webhook receiver edge function for real-time message events
-- Channel message ingestion → Memory Agent pipeline
-- **Meeting transcript capture**: Slack Huddle/call transcripts automatically recorded, summarized by Memory Agent, saved to knowledge base, and scanned by Critic Agent for conflicts
-- Architecture ready: connector interface defined, swap simulated → real with API keys
+**Demo org members (all `pass123#`):**
+- `sarah.chen@apple.com` (Engineering Lead, manager)
+- `marcus.johnson@apple.com` (Product Manager, manager)
+- `emily.rodriguez@apple.com` (Designer, member)
+- `david.kim@apple.com` (Sales, member)
+- `lisa.wang@apple.com` (Marketing, member)
+- `james.taylor@apple.com` (Legal, member)
+- `priya.patel@apple.com` (HR, member)
+- `alex.martinez@apple.com` (Operations, member)
+- `rachel.green@apple.com` (Engineering, member)
 
-### Gmail / Google Email Integration
-- Google OAuth 2.0 via edge function (Gmail API: readonly scope)
-- Periodic sync edge function fetches new emails via Gmail API
-- Email threads parsed → entities extracted → graph updated
-- Reply drafting via Coordinator Agent
+All accounts created with `email_confirm: true` (no verification needed). All profiles have `onboarding_completed = true`.
 
-### Google Calendar Integration
-- Google Calendar API via connector gateway (`https://gateway.lovable.dev/google_calendar/calendar/v3`)
-- Meeting sync: attendees, agendas, linked topics
-- Meeting ends → triggers transcript processing pipeline
-- Scheduling conflict detection linked to project timelines
+**8 teams created:** Engineering, Product, Design, Sales, Marketing, Legal, HR, Operations -- with members assigned.
 
-### Simulated Fallback Mode
-- Until real API keys are provided, all three integrations run in simulated mode with seed data
-- Toggle between real/simulated per integration in settings
-- Same UI and agent pipeline regardless of data source
+### 3. "Try the Demo" Button
 
----
+- Clicking "Try the Demo" on the landing page signs in as `jane.founder@acme-demo.com` (the org admin of the demo org)
+- This gives the full manager/admin experience of the demo org
+- On success, redirects to `/dashboard`
+- Shows a "Demo Mode" badge in the dashboard
 
-## Phase 10: Multi-Agent System with Pinecone Memory
+### 4. Manager Onboarding Wizard (`/onboarding`)
 
-### Memory Agent (Blue)
-- Extracts entities/topics/decisions from messages and transcripts
-- Generates embeddings → upserts to Pinecone (namespaced by org)
-- Creates version-stamped knowledge entries
-- Links to projects automatically
-- Meeting pipeline: transcript → summary → knowledge base → Neo4j graph update
+Shown to new users who sign up and have `onboarding_completed = false`:
 
-### Router Agent (Green)
-- Semantic search via Pinecone for stakeholder relevance
-- "Who needs to know" with reasoning
-- Post-meeting notifications for absent stakeholders
+- **Step 1: Create Organization** -- name, auto-slug, creates `organizations` row + `org_memberships` with admin role
+- **Step 2: Set Up Teams** -- pre-suggested team names with add/remove, creates `teams` rows
+- **Step 3: Invite Members** -- email + role input, creates `invitations` rows, generates invite links for managers to share
+- **Completion** -- sets `onboarding_completed = true`, redirects to `/dashboard`
 
-### Critic Agent (Red)
-- Queries Pinecone for semantically similar decisions to detect contradictions
-- Flags conflicts in meeting summaries vs existing knowledge
-- Alerts on stalled projects, communication silos, missed milestones
+### 5. Send Invite Edge Function (`send-invite`)
 
-### Coordinator Agent (Purple)
-- Natural language queries with Pinecone retrieval + Neo4j graph traversal
-- Orchestrates other agents, persistent conversation memory
-- Work planning, project status, communication drafting
+- Validates caller is org manager/admin (via auth token)
+- Creates invitation record with unique token
+- Generates invite link: `{SITE_URL}/accept-invite?token={token}`
+- Returns the link (email sending can be added later with Resend or similar)
+- For now, the link is displayed in the UI for the manager to copy/share manually
 
-### Agent Reasoning Display
-- Collapsible thinking panels, color-coded, typewriter animation
-- Shows retrieved memories (Pinecone scores), graph paths (Neo4j), conflict reasoning
+### 6. Accept Invite Page (`/accept-invite`)
 
----
+- Reads `token` from URL query params
+- Validates: token exists, not expired, status = pending
+- Shows org name and offered role
+- If not logged in: shows signup form with email pre-filled (read-only)
+- If logged in: shows "Accept Invitation" button
+- On accept: creates `org_memberships` row, sets invitation status to `accepted`, sets `onboarding_completed = true`, redirects to `/dashboard`
 
-## Phase 11: Dashboard & Command Center
+### 7. Updated Routing
 
-### Layout
-- Left sidebar: nav, org switcher, voice button, integration toggles
-- Center: 3D Knowledge Graph (Neo4j-powered)
-- Right panel: context details
-- Bottom drawer: activity feed & agent logs
+- `/` -- Landing page
+- `/auth` -- Login / Signup (handles `?token=` for invited users)
+- `/onboarding` -- Manager onboarding wizard (protected; skipped if onboarding completed)
+- `/accept-invite` -- Invitation acceptance (reads token from query)
+- `/dashboard` -- Main dashboard (protected; requires completed onboarding)
 
-### Views
-1. **Graph View** — 3D graph (server-rendered layout from Neo4j)
-2. **Activity Feed** — Real-time messages, transcripts, agent actions
-3. **Conflict Monitor** — Critic-flagged contradictions
-4. **Stakeholder View** — Person's knowledge radius (Neo4j traversal)
-5. **Decision Timeline** — Versioned decisions with propagation
-6. **Living Source of Truth** — Searchable knowledge base with meeting summaries
-7. **Integrations** — Slack, Gmail, Calendar (real or simulated)
-8. **AI Assistant** — Chat with Coordinator
-9. **People & Teams** — Manager team/role management
-10. **Projects** — Tracking with milestones, tasks, agent-generated progress
-11. **Communications** — Manager-only analytics and oversight
+### 8. Protected Route Updates
 
-### Demo Mode
-- Scripted sequence covering all 5 hackathon scenarios + transcript pipeline + project tracking
+`ProtectedRoute` will check:
+1. Is user authenticated? If no, redirect to `/auth`
+2. Is `onboarding_completed` false? If yes, redirect to `/onboarding`
+3. Otherwise, render children
+
+### 9. Dashboard Updates
+
+- Show "Demo Mode" badge when logged in as a demo account (check email domain `@apple.com`)
+- Show user's org name in header
+- Platform admin (`admin@chiefofstaff.ai`) will eventually get a platform management view
 
 ---
 
-## Phase 12: Voice Interaction (OpenAI Realtime API)
+## Files to Create/Modify
 
-- Full-duplex WebSocket via edge function
-- Voice commands filter/highlight the graph
-- Transcript in activity feed, text fallback
-
----
-
-## Phase 13: Mobile & PWA
-- Responsive layout, 2D graph fallback on mobile, bottom nav
-
----
-
-## Phase 14: Testing (Vitest + Playwright)
-
-### Unit Tests (Vitest)
-- Utils, components, agent logic, auth, caching, team management, project tracking
-- Neo4j query builders, Pinecone embedding helpers
-- Transcript processing and summarization logic
-
-### Integration Tests (Vitest)
-- Full user flows, agent chains, transcript → summary → knowledge base → conflict pipeline
-- Pinecone upsert/query with mock client
-- Neo4j graph operations with mock driver
-- Role-based access verification
-
-### E2E Tests (Playwright)
-- Auth flows, all dashboard views, graph interaction, agent queries
-- Manager flows: team assignment, communication analytics, meeting summary review
-- Transcript pipeline: meeting → summary → conflict → notification
-- Project tracking: create, tasks, agent-generated updates
-- Multi-tenant isolation, mobile viewport, voice flow, demo mode
-
----
-
-## Phase 15: GitHub Actions CI/CD
-
-- `.github/workflows/ci.yml` pipeline:
-  - **Lint**: ESLint on push/PR
-  - **Unit + Integration Tests**: `vitest run` with coverage reporting
-  - **Build**: `vite build` to catch compilation errors
-  - **E2E Tests**: Playwright against preview deployment (Chromium, Firefox, WebKit)
-  - **Deploy**: Auto-deploy on main branch merge
-- PR checks: all tests must pass before merge
-- Coverage thresholds enforced (e.g., 80% for agent logic)
-- Playwright test artifacts (screenshots, traces) uploaded on failure
-
----
-
-## Phase 16: Demo Polish
-
-- Dark theme with glowing Neo4j-powered graph nodes
-- Glass-morphism panels, micro-animations, typewriter agent reasoning
-- All 5 hackathon scenarios + transcript pipeline + project tracking demonstrable
-- Full evaluation criteria coverage
-
----
-
-## Architecture Summary
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React + Vite + Tailwind + react-force-graph-3d |
-| Auth | Supabase Auth (email + Google OAuth) |
-| Relational DB | Supabase PostgreSQL (RLS, multi-tenant) |
-| Graph DB | Neo4j (server-side knowledge graph computation) |
-| Vector DB | Pinecone (semantic memory, org-namespaced) |
-| Embeddings | OpenAI text-embedding-3-small |
-| Edge Functions | Supabase (agents, Neo4j proxy, Pinecone proxy, integrations) |
-| Voice | OpenAI Realtime API (WebSocket) |
-| Integrations | Slack API, Gmail API, Google Calendar API (real + simulated fallback) |
-| Caching | React Query (client) + Edge Function cache (server) |
-| Testing | Vitest + React Testing Library + Playwright |
-| CI/CD | GitHub Actions |
+| File | Action | Purpose |
+|------|--------|---------|
+| Database migration | Create | `invitations` table + `onboarding_completed` column |
+| `supabase/functions/seed-demo-data/index.ts` | Create | Bootstrap demo accounts and org |
+| `supabase/functions/send-invite/index.ts` | Create | Generate and store invite tokens |
+| `src/pages/Onboarding.tsx` | Create | Multi-step manager onboarding wizard |
+| `src/pages/AcceptInvite.tsx` | Create | Invite acceptance flow |
+| `src/components/landing/HeroSection.tsx` | Modify | Demo login button behavior |
+| `src/components/auth/ProtectedRoute.tsx` | Modify | Add onboarding completion check |
+| `src/App.tsx` | Modify | Add new routes |
+| `src/pages/Dashboard.tsx` | Modify | Demo mode badge, org name |
+| `src/contexts/AuthContext.tsx` | Modify | Add profile/org data loading |
+| `supabase/config.toml` | Modify | Register edge functions |
 
