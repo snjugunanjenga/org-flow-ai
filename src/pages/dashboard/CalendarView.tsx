@@ -4,12 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrgId } from "@/hooks/use-org-id";
 import { useToast } from "@/hooks/use-toast";
 import { useGoogleCalendar } from "@/hooks/use-google-calendar";
-import { CalendarDays, Plus, Video, Clock, Trash2, RefreshCw, LogIn, LogOut } from "lucide-react";
+import { CalendarDays, Plus, Video, Clock, Trash2, RefreshCw, LogIn, LogOut, FolderKanban, AlertTriangle, CheckSquare } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { CalendarEventForm } from "@/components/calendar/CalendarEventForm";
 
@@ -26,6 +24,14 @@ interface CalendarEvent {
   created_by: string;
 }
 
+interface ProjectItem {
+  id: string;
+  title: string;
+  date: string;
+  itemType: "project_deadline" | "task_due" | "topic";
+  color: string;
+}
+
 export default function CalendarView() {
   const { user } = useAuth();
   const orgId = useOrgId();
@@ -33,10 +39,12 @@ export default function CalendarView() {
   const google = useGoogleCalendar();
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [projectItems, setProjectItems] = useState<ProjectItem[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showCreate, setShowCreate] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showProjectItems, setShowProjectItems] = useState(true);
 
   const loadEvents = useCallback(async () => {
     if (!orgId) return;
@@ -44,7 +52,48 @@ export default function CalendarView() {
     setEvents((data as CalendarEvent[]) || []);
   }, [orgId]);
 
-  // Check Google connection + handle OAuth callback
+  const loadProjectItems = useCallback(async () => {
+    if (!orgId) return;
+    const items: ProjectItem[] = [];
+
+    // Projects with target dates
+    const { data: projects } = await supabase
+      .from("projects")
+      .select("id, name, target_date, start_date")
+      .eq("org_id", orgId)
+      .not("target_date", "is", null);
+    projects?.forEach((p) => {
+      if (p.target_date) {
+        items.push({ id: `proj-${p.id}`, title: `📁 ${p.name} (deadline)`, date: p.target_date, itemType: "project_deadline", color: "hsl(280, 70%, 65%)" });
+      }
+    });
+
+    // Tasks with due dates
+    const { data: tasks } = await supabase
+      .from("project_tasks")
+      .select("id, title, due_date, status")
+      .eq("org_id", orgId)
+      .not("due_date", "is", null);
+    tasks?.forEach((t: any) => {
+      if (t.due_date) {
+        items.push({ id: `task-${t.id}`, title: `✅ ${t.title}`, date: t.due_date, itemType: "task_due", color: "hsl(170, 70%, 50%)" });
+      }
+    });
+
+    // Topics with recent updates (show on their updated_at date)
+    const { data: topics } = await supabase
+      .from("topics")
+      .select("id, title, updated_at, category")
+      .eq("org_id", orgId)
+      .order("updated_at", { ascending: false })
+      .limit(20);
+    topics?.forEach((t) => {
+      items.push({ id: `topic-${t.id}`, title: `💡 ${t.title}`, date: t.updated_at.split("T")[0], itemType: "topic", color: "hsl(40, 90%, 60%)" });
+    });
+
+    setProjectItems(items);
+  }, [orgId]);
+
   useEffect(() => {
     google.checkConnection();
     const params = new URLSearchParams(window.location.search);
@@ -59,11 +108,31 @@ export default function CalendarView() {
     }
   }, []);
 
-  useEffect(() => { loadEvents(); }, [loadEvents]);
+  useEffect(() => { loadEvents(); loadProjectItems(); }, [loadEvents, loadProjectItems]);
 
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
   const firstDayOffset = startOfMonth(currentMonth).getDay();
-  const getEventsForDay = (date: Date) => events.filter(e => isSameDay(new Date(e.start_time), date));
+
+  const getEventsForDay = (date: Date): CalendarEvent[] => {
+    const calEvents = events.filter(e => isSameDay(new Date(e.start_time), date));
+    if (!showProjectItems) return calEvents;
+    // Merge project items as pseudo-events
+    const dateStr = format(date, "yyyy-MM-dd");
+    const pItems = projectItems.filter(p => p.date === dateStr);
+    const pseudoEvents: CalendarEvent[] = pItems.map(p => ({
+      id: p.id,
+      title: p.title,
+      description: null,
+      start_time: `${p.date}T00:00:00`,
+      end_time: `${p.date}T23:59:59`,
+      location: null,
+      meet_link: null,
+      event_type: p.itemType,
+      attendees: [],
+      created_by: "",
+    }));
+    return [...calEvents, ...pseudoEvents];
+  };
 
   const handleDelete = async (id: string) => {
     await supabase.from("calendar_events").delete().eq("id", id);
@@ -83,12 +152,20 @@ export default function CalendarView() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold font-display">Calendar</h1>
-          <p className="text-muted-foreground mt-1">Schedule meetings and sync with Google Calendar.</p>
+          <p className="text-muted-foreground mt-1">Schedule meetings, track deadlines, and sync with Google Calendar.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant={showProjectItems ? "default" : "outline"}
+            onClick={() => setShowProjectItems(!showProjectItems)}
+          >
+            <FolderKanban className="h-4 w-4 mr-1" />
+            {showProjectItems ? "Hide" : "Show"} Projects
+          </Button>
           {google.connected ? (
             <>
               <Button size="sm" variant="outline" onClick={handleSync} disabled={google.syncing}>
@@ -110,6 +187,16 @@ export default function CalendarView() {
         </div>
       </div>
 
+      {/* Legend */}
+      {showProjectItems && (
+        <div className="flex gap-4 flex-wrap text-xs">
+          <div className="flex items-center gap-1.5"><CalendarDays className="h-3 w-3 text-primary" /><span className="text-muted-foreground">Meeting</span></div>
+          <div className="flex items-center gap-1.5"><FolderKanban className="h-3 w-3" style={{ color: "hsl(280, 70%, 65%)" }} /><span className="text-muted-foreground">Project Deadline</span></div>
+          <div className="flex items-center gap-1.5"><CheckSquare className="h-3 w-3" style={{ color: "hsl(170, 70%, 50%)" }} /><span className="text-muted-foreground">Task Due</span></div>
+          <div className="flex items-center gap-1.5"><AlertTriangle className="h-3 w-3" style={{ color: "hsl(40, 90%, 60%)" }} /><span className="text-muted-foreground">Topic</span></div>
+        </div>
+      )}
+
       {/* Calendar Grid */}
       <CalendarGrid
         currentMonth={currentMonth}
@@ -120,8 +207,12 @@ export default function CalendarView() {
         onSelectDate={setSelectedDate}
         onPrevMonth={() => setCurrentMonth(subMonths(currentMonth, 1))}
         onNextMonth={() => setCurrentMonth(addMonths(currentMonth, 1))}
-        onSelectEvent={setSelectedEvent}
-        onCreateForDate={(date) => setShowCreate(true)}
+        onSelectEvent={(e) => {
+          if (!e.id.startsWith("proj-") && !e.id.startsWith("task-") && !e.id.startsWith("topic-")) {
+            setSelectedEvent(e);
+          }
+        }}
+        onCreateForDate={() => setShowCreate(true)}
       />
 
       {/* Day events sidebar */}
@@ -137,22 +228,31 @@ export default function CalendarView() {
             <p className="text-sm text-muted-foreground">No events scheduled.</p>
           ) : (
             <div className="space-y-3">
-              {dayEvents.map(e => (
-                <button key={e.id} onClick={() => setSelectedEvent(e)} className="w-full text-left p-3 rounded-lg bg-muted/30 hover:ring-1 hover:ring-primary/30 transition-all">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold">{e.title}</h4>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {format(new Date(e.start_time), "h:mm a")} - {format(new Date(e.end_time), "h:mm a")}
+              {dayEvents.map(e => {
+                const isPseudo = e.id.startsWith("proj-") || e.id.startsWith("task-") || e.id.startsWith("topic-");
+                return (
+                  <button
+                    key={e.id}
+                    onClick={() => !isPseudo && setSelectedEvent(e)}
+                    className={`w-full text-left p-3 rounded-lg transition-all ${isPseudo ? "bg-muted/20 cursor-default" : "bg-muted/30 hover:ring-1 hover:ring-primary/30 cursor-pointer"}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold">{e.title}</h4>
+                      {!isPseudo && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {format(new Date(e.start_time), "h:mm a")} - {format(new Date(e.end_time), "h:mm a")}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  {e.meet_link && (
-                    <div className="flex items-center gap-1 mt-1 text-xs text-primary">
-                      <Video className="h-3 w-3" /> Google Meet
-                    </div>
-                  )}
-                </button>
-              ))}
+                    {e.meet_link && (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-primary">
+                        <Video className="h-3 w-3" /> Google Meet
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

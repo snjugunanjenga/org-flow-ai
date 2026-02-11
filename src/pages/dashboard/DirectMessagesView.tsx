@@ -14,6 +14,7 @@ interface DirectMessage {
   team_id: string | null;
   content: string;
   is_team_message: boolean;
+  read: boolean;
   created_at: string;
 }
 
@@ -58,7 +59,47 @@ export default function DirectMessagesView() {
   };
 
   useEffect(() => { loadData(); }, [orgId, user]);
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages, selectedChannel]);
+
+  // Realtime subscription for new messages
+  useEffect(() => {
+    if (!orgId) return;
+    const channel = supabase
+      .channel(`dm-${orgId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "direct_messages", filter: `org_id=eq.${orgId}` },
+        (payload) => {
+          const newMsg = payload.new as DirectMessage;
+          setMessages((prev) => [...prev, newMsg]);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [orgId]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, selectedChannel]);
+
+  // Mark messages as read when selecting a channel
+  useEffect(() => {
+    if (!selectedChannel || !user) return;
+    const unreadIds = messages
+      .filter((m) => {
+        if (selectedChannel.type === "user") {
+          return !m.is_team_message && m.sender_id === selectedChannel.id && m.recipient_id === user.id && !m.read;
+        }
+        return m.is_team_message && m.team_id === selectedChannel.id && m.sender_id !== user.id && !m.read;
+      })
+      .map((m) => m.id);
+
+    if (unreadIds.length > 0) {
+      supabase.from("direct_messages").update({ read: true }).in("id", unreadIds).then(() => {
+        setMessages((prev) => prev.map((m) => (unreadIds.includes(m.id) ? { ...m, read: true } : m)));
+      });
+    }
+  }, [selectedChannel, messages, user]);
 
   const channels: Channel[] = [
     ...members.filter(m => m.user_id !== user?.id).map(m => ({ type: "user" as const, id: m.user_id, name: m.display_name || "Unknown" })),
@@ -76,6 +117,15 @@ export default function DirectMessagesView() {
         return m.is_team_message && m.team_id === selectedChannel.id;
       })
     : [];
+
+  const getUnreadCount = (ch: Channel): number => {
+    return messages.filter((m) => {
+      if (ch.type === "user") {
+        return !m.is_team_message && m.sender_id === ch.id && m.recipient_id === user?.id && !m.read;
+      }
+      return m.is_team_message && m.team_id === ch.id && m.sender_id !== user?.id && !m.read;
+    }).length;
+  };
 
   const getMemberName = (id: string) => members.find(m => m.user_id === id)?.display_name || "Unknown";
 
@@ -96,7 +146,6 @@ export default function DirectMessagesView() {
     const { error } = await supabase.from("direct_messages").insert(msg);
     if (error) { toast({ variant: "destructive", title: "Error", description: error.message }); return; }
     setInput("");
-    loadData();
   };
 
   return (
@@ -111,33 +160,45 @@ export default function DirectMessagesView() {
         <div className="glass-panel p-4 overflow-y-auto">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-3">People</h3>
           <div className="space-y-1">
-            {channels.filter(c => c.type === "user").map(c => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedChannel(c)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  selectedChannel?.id === c.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
-              >
-                <MessageCircle className="h-4 w-4 shrink-0" />
-                <span className="truncate">{c.name}</span>
-              </button>
-            ))}
+            {channels.filter(c => c.type === "user").map(c => {
+              const unread = getUnreadCount(c);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedChannel(c)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    selectedChannel?.id === c.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <MessageCircle className="h-4 w-4 shrink-0" />
+                  <span className="truncate flex-1 text-left">{c.name}</span>
+                  {unread > 0 && (
+                    <span className="bg-primary text-primary-foreground text-[10px] rounded-full px-1.5 py-0.5 font-bold">{unread}</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-3 mt-6">Teams</h3>
           <div className="space-y-1">
-            {channels.filter(c => c.type === "team").map(c => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedChannel(c)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  selectedChannel?.id === c.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
-              >
-                <Hash className="h-4 w-4 shrink-0" />
-                <span className="truncate">{c.name}</span>
-              </button>
-            ))}
+            {channels.filter(c => c.type === "team").map(c => {
+              const unread = getUnreadCount(c);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedChannel(c)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    selectedChannel?.id === c.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <Hash className="h-4 w-4 shrink-0" />
+                  <span className="truncate flex-1 text-left">{c.name}</span>
+                  {unread > 0 && (
+                    <span className="bg-primary text-primary-foreground text-[10px] rounded-full px-1.5 py-0.5 font-bold">{unread}</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 

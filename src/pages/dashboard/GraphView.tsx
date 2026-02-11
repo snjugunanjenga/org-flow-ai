@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrgId } from "@/hooks/use-org-id";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ForceGraph } from "@/components/graph/ForceGraph";
+import { MindMapCanvas } from "@/components/graph/MindMapCanvas";
 import { ChevronDown } from "lucide-react";
 
 interface GraphEdge {
@@ -97,13 +97,30 @@ export default function GraphView() {
         ))}
       </div>
 
-      {/* Force-directed graph canvas */}
-      <ForceGraph
-        nodes={filteredNodes}
+      {/* Interactive Mind Map */}
+      <MindMapCanvas
         edges={filteredEdges}
         typeColors={typeColors}
         onNodeClick={handleNodeClick}
       />
+
+      {/* Entity Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredNodes.slice(0, 12).map(node => (
+          <button
+            key={`${node.type}:${node.label}`}
+            onClick={() => setSelectedNode(node)}
+            className={`glass-panel p-4 text-left hover:ring-1 transition-all cursor-pointer border-l-4 ${typeBorders[node.type] || "border-muted"}`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-2.5 h-2.5 rounded-full ${typeColors[node.type] || "bg-muted"}`} />
+              <span className="text-xs text-muted-foreground capitalize">{node.type}</span>
+            </div>
+            <h3 className="text-sm font-semibold truncate">{node.label}</h3>
+            <p className="text-xs text-muted-foreground mt-1">{node.connections} connections</p>
+          </button>
+        ))}
+      </div>
 
       {/* Collapsible relationships list */}
       <Collapsible open={relOpen} onOpenChange={setRelOpen}>
