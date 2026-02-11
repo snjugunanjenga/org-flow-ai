@@ -1,7 +1,7 @@
 import { 
   LayoutDashboard, Users, FolderKanban, MessageSquare, 
   Network, Brain, AlertTriangle, Bell, Settings, 
-  BarChart3, Eye, LogOut, FlaskConical, CalendarDays, MessageCircle
+  BarChart3, Eye, LogOut, FlaskConical, CalendarDays, MessageCircle, BookOpen
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +32,7 @@ const mainNav = [
   { title: "AI Agents", url: "/dashboard/agents", icon: Brain },
   { title: "Messages", url: "/dashboard/messages", icon: MessageSquare },
   { title: "Topics & Decisions", url: "/dashboard/topics", icon: AlertTriangle },
+  { title: "Resources", url: "/dashboard/resources", icon: BookOpen },
 ];
 
 const orgNav = [

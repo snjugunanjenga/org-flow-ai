@@ -216,7 +216,7 @@ export default function Onboarding() {
                   </Button>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setStep(0)}><ArrowLeft className="mr-2 h-4 w-4" />Back</Button>
+                  <Button variant="outline" onClick={() => setStep(0)} disabled={!!orgId}><ArrowLeft className="mr-2 h-4 w-4" />Back</Button>
                   <Button onClick={handleCreateTeams} disabled={teams.length === 0 || loading} className="flex-1">
                     {loading ? "Creating teams..." : "Create Teams"}
                     <ArrowRight className="ml-2 h-4 w-4" />

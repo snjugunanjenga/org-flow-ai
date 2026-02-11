@@ -5,9 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import ResourcesView from "./pages/dashboard/ResourcesView";
 import AcceptInvite from "./pages/AcceptInvite";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import Overview from "./pages/dashboard/Overview";
@@ -37,7 +39,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/onboarding" element={<OnboardingGuard><Onboarding /></OnboardingGuard>} />
             <Route path="/accept-invite" element={<AcceptInvite />} />
             <Route
               path="/dashboard"
@@ -60,6 +62,7 @@ const App = () => (
               <Route path="settings" element={<SettingsView />} />
               <Route path="calendar" element={<CalendarView />} />
               <Route path="dm" element={<DirectMessagesView />} />
+              <Route path="resources" element={<ResourcesView />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

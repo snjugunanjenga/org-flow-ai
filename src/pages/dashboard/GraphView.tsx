@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrgId } from "@/hooks/use-org-id";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ForceGraph } from "@/components/graph/ForceGraph";
+import { ChevronDown } from "lucide-react";
 
 interface GraphEdge {
   id: string;
@@ -41,6 +44,7 @@ export default function GraphView() {
   const [edges, setEdges] = useState<GraphEdge[]>([]);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedNode, setSelectedNode] = useState<NodeInfo | null>(null);
+  const [relOpen, setRelOpen] = useState(false);
 
   useEffect(() => {
     if (!orgId) return;
@@ -63,6 +67,11 @@ export default function GraphView() {
   const filteredNodes = selectedType === "all" ? nodes : nodes.filter(n => n.type === selectedType);
   const filteredEdges = selectedType === "all" ? edges : edges.filter(e => e.source_type === selectedType || e.target_type === selectedType);
   const types = ["all", ...new Set(nodes.map(n => n.type))];
+
+  const handleNodeClick = (node: { type: string; label: string; connections: number }) => {
+    const full = nodesMap.get(`${node.type}:${node.label}`);
+    if (full) setSelectedNode(full);
+  };
 
   return (
     <div className="space-y-6">
@@ -88,33 +97,36 @@ export default function GraphView() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {filteredNodes.map((node, i) => (
-          <button key={i} onClick={() => setSelectedNode(node)} className={`glass-panel p-4 border-l-4 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer ${typeBorders[node.type] || "border-border"}`}>
-            <div className="flex items-center gap-2 mb-1">
-              <div className={`w-2 h-2 rounded-full ${typeColors[node.type] || "bg-muted"}`} />
-              <span className="text-xs uppercase text-muted-foreground">{node.type}</span>
-            </div>
-            <h4 className="text-sm font-semibold">{node.label}</h4>
-            <p className="text-[10px] text-muted-foreground mt-1">{node.connections} connections</p>
-          </button>
-        ))}
-      </div>
+      {/* Force-directed graph canvas */}
+      <ForceGraph
+        nodes={filteredNodes}
+        edges={filteredEdges}
+        typeColors={typeColors}
+        onNodeClick={handleNodeClick}
+      />
 
-      <div className="glass-panel p-6">
-        <h3 className="text-lg font-semibold font-display mb-4">Relationships ({filteredEdges.length})</h3>
-        <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {filteredEdges.map(e => (
-            <div key={e.id} className="flex items-center gap-2 py-1.5 text-sm border-b border-border/20 last:border-0">
-              <span className={`w-2 h-2 rounded-full shrink-0 ${typeColors[e.source_type] || "bg-muted"}`} />
-              <span className="font-medium">{e.source_label}</span>
-              <span className="text-xs text-muted-foreground px-2 py-0.5 rounded bg-muted/50">{e.relationship}</span>
-              <span className={`w-2 h-2 rounded-full shrink-0 ${typeColors[e.target_type] || "bg-muted"}`} />
-              <span className="font-medium">{e.target_label}</span>
+      {/* Collapsible relationships list */}
+      <Collapsible open={relOpen} onOpenChange={setRelOpen}>
+        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold font-display hover:text-primary transition-colors">
+          <ChevronDown className={`h-4 w-4 transition-transform ${relOpen ? "rotate-180" : ""}`} />
+          Relationships ({filteredEdges.length})
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="glass-panel p-6 mt-2">
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {filteredEdges.map(e => (
+                <div key={e.id} className="flex items-center gap-2 py-1.5 text-sm border-b border-border/20 last:border-0">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${typeColors[e.source_type] || "bg-muted"}`} />
+                  <span className="font-medium">{e.source_label}</span>
+                  <span className="text-xs text-muted-foreground px-2 py-0.5 rounded bg-muted/50">{e.relationship}</span>
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${typeColors[e.target_type] || "bg-muted"}`} />
+                  <span className="font-medium">{e.target_label}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Node detail dialog */}
       <Dialog open={!!selectedNode} onOpenChange={() => setSelectedNode(null)}>
