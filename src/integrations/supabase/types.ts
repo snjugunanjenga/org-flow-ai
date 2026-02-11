@@ -766,6 +766,7 @@ export type Database = {
         Row: {
           assignee_name: string | null
           created_at: string
+          due_date: string | null
           id: string
           milestone_id: string | null
           org_id: string
@@ -778,6 +779,7 @@ export type Database = {
         Insert: {
           assignee_name?: string | null
           created_at?: string
+          due_date?: string | null
           id?: string
           milestone_id?: string | null
           org_id: string
@@ -790,6 +792,7 @@ export type Database = {
         Update: {
           assignee_name?: string | null
           created_at?: string
+          due_date?: string | null
           id?: string
           milestone_id?: string | null
           org_id?: string
