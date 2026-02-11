@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_newsletters: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sent_at: string
+          sent_by: string
+          subject: string
+          target_audience: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sent_at?: string
+          sent_by: string
+          subject: string
+          target_audience?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sent_at?: string
+          sent_by?: string
+          subject?: string
+          target_audience?: string
+        }
+        Relationships: []
+      }
       agent_logs: {
         Row: {
           action: string
@@ -1105,6 +1135,53 @@ export type Database = {
             foreignKeyName: "resource_sources_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          canceled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string
+          id: string
+          org_id: string
+          plan: string
+          status: string
+          trial_ends_at: string
+          updated_at: string
+        }
+        Insert: {
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          id?: string
+          org_id: string
+          plan?: string
+          status?: string
+          trial_ends_at?: string
+          updated_at?: string
+        }
+        Update: {
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          id?: string
+          org_id?: string
+          plan?: string
+          status?: string
+          trial_ends_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },

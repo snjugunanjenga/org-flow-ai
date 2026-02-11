@@ -1,8 +1,10 @@
 import { 
   LayoutDashboard, Users, FolderKanban, MessageSquare, 
   Network, Brain, AlertTriangle, Bell, Settings, 
-  BarChart3, Eye, LogOut, FlaskConical, CalendarDays, MessageCircle, BookOpen
+  BarChart3, Eye, LogOut, FlaskConical, CalendarDays, MessageCircle, BookOpen, Shield
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -49,11 +51,23 @@ const systemNav = [
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
+const adminNav = [
+  { title: "Platform Admin", url: "/dashboard/admin", icon: Shield },
+];
+
 export function DashboardSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { user, signOut } = useAuth();
   const isDemo = user?.email ? DEMO_EMAILS.includes(user.email) : false;
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle().then(({ data }) => {
+      setIsAdmin(!!data);
+    });
+  }, [user]);
 
   const linkClass = "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors";
   const activeClass = "bg-primary/10 text-primary font-medium";
@@ -131,6 +145,26 @@ export function DashboardSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminNav.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url} className={linkClass} activeClassName={activeClass}>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
