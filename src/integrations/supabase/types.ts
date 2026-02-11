@@ -918,6 +918,195 @@ export type Database = {
           },
         ]
       }
+      resource_chats: {
+        Row: {
+          citations: Json | null
+          content: string
+          created_at: string
+          id: string
+          notebook_id: string
+          org_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          citations?: Json | null
+          content: string
+          created_at?: string
+          id?: string
+          notebook_id: string
+          org_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          citations?: Json | null
+          content?: string
+          created_at?: string
+          id?: string
+          notebook_id?: string
+          org_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_chats_notebook_id_fkey"
+            columns: ["notebook_id"]
+            isOneToOne: false
+            referencedRelation: "resource_notebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_chats_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_notebooks: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          org_id: string
+          project_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          org_id: string
+          project_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          org_id?: string
+          project_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_notebooks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_notebooks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_outputs: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          notebook_id: string
+          org_id: string
+          output_type: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          notebook_id: string
+          org_id: string
+          output_type?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          notebook_id?: string
+          org_id?: string
+          output_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_outputs_notebook_id_fkey"
+            columns: ["notebook_id"]
+            isOneToOne: false
+            referencedRelation: "resource_notebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_outputs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_sources: {
+        Row: {
+          content: string
+          created_at: string
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          notebook_id: string
+          org_id: string
+          source_type: string
+          title: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          notebook_id: string
+          org_id: string
+          source_type?: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          notebook_id?: string
+          org_id?: string
+          source_type?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_sources_notebook_id_fkey"
+            columns: ["notebook_id"]
+            isOneToOne: false
+            referencedRelation: "resource_notebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_sources_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_memberships: {
         Row: {
           assigned_at: string
