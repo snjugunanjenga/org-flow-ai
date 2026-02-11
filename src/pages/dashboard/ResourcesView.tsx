@@ -37,11 +37,15 @@ export default function ResourcesView() {
 
   const handleCreate = async (title: string) => {
     if (!orgId || !user) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("resource_notebooks")
       .insert({ title, org_id: orgId, created_by: user.id })
       .select()
       .single();
+    if (error) {
+      console.error("Create notebook error:", error);
+      return;
+    }
     if (data) {
       setNotebooks((prev) => [data as any, ...prev]);
       setSelectedId((data as any).id);

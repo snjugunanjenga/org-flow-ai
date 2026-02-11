@@ -25,6 +25,7 @@ import AnalyticsView from "./pages/dashboard/AnalyticsView";
 import SettingsView from "./pages/dashboard/SettingsView";
 import CalendarView from "./pages/dashboard/CalendarView";
 import DirectMessagesView from "./pages/dashboard/DirectMessagesView";
+import AdminView from "./pages/dashboard/AdminView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="calendar" element={<CalendarView />} />
               <Route path="dm" element={<DirectMessagesView />} />
               <Route path="resources" element={<ResourcesView />} />
+              <Route path="admin" element={<AdminView />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
