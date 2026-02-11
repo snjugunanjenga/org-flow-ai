@@ -95,6 +95,7 @@ ${source_context || "No sources provided."}`;
         briefing: "Create an executive briefing document with key findings, risks, and recommendations.",
         faq: "Create a FAQ document with common questions and answers based on the sources.",
         "study-guide": "Create a study guide with key concepts, definitions, and review questions.",
+        slides: "Create a slide deck outline with 8-12 slides. Each slide should have a title and 3-5 bullet points. Format as: ## Slide N: Title\\n- bullet point",
       };
 
       const prompt = `${typePrompts[report_type] || typePrompts.briefing}
