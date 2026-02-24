@@ -7,6 +7,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
+const DEMO_PASSWORD = "aqC!xeF2";
+
 const subtitles = [
   "Tracking every decision across your org",
   "Routing critical knowledge to the right people",
@@ -23,7 +25,7 @@ export function HeroSection() {
   const handleTryDemo = async () => {
     setDemoLoading(true);
     try {
-      const { error } = await signIn("steve.jobs@apple.com", "pass123#");
+      const { error } = await signIn("steve.jobs@apple.com", DEMO_PASSWORD);
       if (error) {
         toast({
           variant: "destructive",

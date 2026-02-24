@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+const SUPER_ADMIN_EMAIL = "simonnjenganjuguna@gmail.com";
+const DEMO_FOUNDER_EMAIL = "steve.jobs@apple.com";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -53,7 +56,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    const attemptSignIn = () => supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password: normalizedPassword,
+    });
+
+    let { error } = await attemptSignIn();
+
+    if (error?.message === "Invalid login credentials") {
+      if (normalizedEmail === SUPER_ADMIN_EMAIL) {
+        await supabase.functions.invoke("seed-super-admin");
+        ({ error } = await attemptSignIn());
+      }
+
+      if (normalizedEmail === DEMO_FOUNDER_EMAIL) {
+        await supabase.functions.invoke("seed-demo-data");
+        ({ error } = await attemptSignIn());
+      }
+    }
+
     return { error: error as Error | null };
   };
 
