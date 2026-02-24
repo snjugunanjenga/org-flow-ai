@@ -52,7 +52,7 @@ const TEAMS = [
   { name: "Operations", color: "#3b82f6", description: "Business operations and logistics" },
 ];
 
-const PASSWORD = "pass123#";
+const PASSWORD = "aqC!xeF2";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {

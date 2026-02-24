@@ -55,6 +55,34 @@ npx playwright test --project=chromium  # Single browser
 npx playwright test --ui             # Interactive mode
 ```
 
+## Super Admin Authentication Verification
+
+Use this scenario to validate platform-level authorization behavior.
+
+### Preconditions
+- Seeded users exist for:
+  - `simonnjenganjuguna@gmail.com` (has `admin` role in `user_roles`)
+  - `steve.jobs@apple.com` (no `admin` role)
+- Seed/demo data is present in admin tables (`subscriptions`, `organizations`, `admin_newsletters`, `admin_audit_log`).
+
+### Playwright E2E Assertions
+1. Login as `simonnjenganjuguna@gmail.com`.
+2. Verify **Platform Admin** is visible in the sidebar.
+3. Open `/dashboard/admin` and verify tabs are visible:
+   - Analytics
+   - Organizations
+   - Subscriptions
+   - Newsletters
+   - Audit Log
+4. Verify admin tabs render non-empty data states (seed/mock records).
+5. Sign out.
+6. Login as `steve.jobs@apple.com`.
+7. Verify **Platform Admin** is not present in the sidebar and direct admin navigation is blocked.
+
+### Notes
+- If credentials are invalid in the current deployment, run this flow against the environment where seeded accounts were created.
+- Capture screenshots for both personas as evidence in QA reports.
+
 ## CI/CD Pipeline
 
 See `.github/workflows/ci.yml`:
