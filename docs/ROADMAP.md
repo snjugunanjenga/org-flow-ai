@@ -2,11 +2,15 @@
 
 ## Phase 1: MVP (Current)
 - [x] Project documentation
-- [ ] Landing page with 3D background
-- [ ] Auth & multi-tenant architecture
-- [ ] Team & role management
-- [ ] Database schema & seed data
-- [ ] Dashboard shell with navigation
+- [x] Landing page with 3D background
+- [x] Auth & multi-tenant architecture
+- [x] Team & role management
+- [x] Database schema & seed data
+- [x] Dashboard shell with navigation
+- [x] Platform Admin (analytics, org management, audit log, newsletters)
+- [x] Multi-tenant subscription enforcement (OrgProvider, FeatureGate, useSubscription)
+- [x] AdminGuard route protection
+- [x] Super Admin account with mock data
 
 ## Phase 2: Intelligence Layer
 - [ ] Neo4j knowledge graph integration

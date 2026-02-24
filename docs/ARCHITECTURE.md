@@ -46,3 +46,21 @@
 - **Multi-tenant via RLS**: All data scoped by `org_id` at the database level
 - **Edge Functions**: Serverless, auto-scaling, secure secret management
 - **Simulated fallback**: All integrations work without API keys using seed data
+
+## Multi-Tenant Architecture
+
+See [MULTI-TENANCY.md](./MULTI-TENANCY.md) for full details.
+
+- **OrgProvider** context provides centralized org state, multi-org switching
+- **useSubscription** hook caches subscription plan/limits via React Query
+- **FeatureGate** component enforces plan limits in the UI
+- **AdminGuard** protects `/dashboard/admin` route (platform superadmin only)
+- Auto-subscription trigger creates free trial on org creation
+
+## Platform Administration
+
+See [ADMIN.md](./ADMIN.md) for full details.
+
+- Platform Admin dashboard at `/dashboard/admin` with Analytics, Organizations, Subscriptions, Newsletters, and Audit Log tabs
+- `admin_audit_log` table tracks all admin actions
+- Cross-tenant visibility via platform admin RLS policies

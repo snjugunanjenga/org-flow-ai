@@ -4,8 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OrgProvider } from "@/contexts/OrgContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
+import { AdminGuard } from "@/components/auth/AdminGuard";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -37,37 +39,39 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<OnboardingGuard><Onboarding /></OnboardingGuard>} />
-            <Route path="/accept-invite" element={<AcceptInvite />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Overview />} />
-              <Route path="graph" element={<GraphView />} />
-              <Route path="agents" element={<AgentsView />} />
-              <Route path="messages" element={<MessagesView />} />
-              <Route path="topics" element={<TopicsView />} />
-              <Route path="teams" element={<TeamsView />} />
-              <Route path="projects" element={<ProjectsView />} />
-              <Route path="oversight" element={<OversightView />} />
-              <Route path="notifications" element={<NotificationsView />} />
-              <Route path="analytics" element={<AnalyticsView />} />
-              <Route path="settings" element={<SettingsView />} />
-              <Route path="calendar" element={<CalendarView />} />
-              <Route path="dm" element={<DirectMessagesView />} />
-              <Route path="resources" element={<ResourcesView />} />
-              <Route path="admin" element={<AdminView />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <OrgProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/onboarding" element={<OnboardingGuard><Onboarding /></OnboardingGuard>} />
+              <Route path="/accept-invite" element={<AcceptInvite />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Overview />} />
+                <Route path="graph" element={<GraphView />} />
+                <Route path="agents" element={<AgentsView />} />
+                <Route path="messages" element={<MessagesView />} />
+                <Route path="topics" element={<TopicsView />} />
+                <Route path="teams" element={<TeamsView />} />
+                <Route path="projects" element={<ProjectsView />} />
+                <Route path="oversight" element={<OversightView />} />
+                <Route path="notifications" element={<NotificationsView />} />
+                <Route path="analytics" element={<AnalyticsView />} />
+                <Route path="settings" element={<SettingsView />} />
+                <Route path="calendar" element={<CalendarView />} />
+                <Route path="dm" element={<DirectMessagesView />} />
+                <Route path="resources" element={<ResourcesView />} />
+                <Route path="admin" element={<AdminGuard><AdminView /></AdminGuard>} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </OrgProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

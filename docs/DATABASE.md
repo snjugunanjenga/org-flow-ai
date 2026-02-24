@@ -35,6 +35,11 @@ All tables include `org_id` with Row Level Security (RLS) policies. The `has_rol
 - `project_tasks` — title, assignee, status, priority, linked milestone
 - `project_updates` — Agent-generated progress entries
 
+### Platform Administration
+- `admin_newsletters` — Platform-wide communications with sent_count, status tracking
+- `admin_audit_log` — Admin action tracking: action, target_type, target_id, metadata
+- `subscriptions` — Org subscription lifecycle: plan, status, trial_ends_at (auto-created on org INSERT)
+
 ### System
 - `notifications` — Routed notifications with reasoning
 - `agent_logs` — Reasoning traces per agent type
