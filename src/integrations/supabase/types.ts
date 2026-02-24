@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
       admin_newsletters: {
         Row: {
           body: string
@@ -21,6 +51,8 @@ export type Database = {
           id: string
           sent_at: string
           sent_by: string
+          sent_count: number
+          status: string
           subject: string
           target_audience: string
         }
@@ -30,6 +62,8 @@ export type Database = {
           id?: string
           sent_at?: string
           sent_by: string
+          sent_count?: number
+          status?: string
           subject: string
           target_audience?: string
         }
@@ -39,6 +73,8 @@ export type Database = {
           id?: string
           sent_at?: string
           sent_by?: string
+          sent_count?: number
+          status?: string
           subject?: string
           target_audience?: string
         }
@@ -691,6 +727,7 @@ export type Database = {
           id: string
           name: string
           slug: string
+          suspended_at: string | null
           updated_at: string
         }
         Insert: {
@@ -699,6 +736,7 @@ export type Database = {
           id?: string
           name: string
           slug: string
+          suspended_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -707,6 +745,7 @@ export type Database = {
           id?: string
           name?: string
           slug?: string
+          suspended_at?: string | null
           updated_at?: string
         }
         Relationships: []
