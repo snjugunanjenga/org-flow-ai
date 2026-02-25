@@ -38,6 +38,14 @@ We built the project as a modern web platform with a multi-agent AI backend and 
 
 From an implementation standpoint, we used a pipeline where communication artifacts are ingested, transformed into structured memory + embeddings + graph relationships, then re-surfaced through AI-assisted querying and role-aware notifications.
 
+### AI tools we leveraged
+
+- **Lovable** for rapid product scaffolding, iteration, and AI-assisted development workflows
+- **GPT-5** (via Lovable AI Gateway) for entity extraction, summarization, orchestration logic, and drafting responses
+- **Gemini** (via Lovable AI Gateway) for complementary reasoning and synthesis tasks
+- **OpenAI Embeddings (`text-embedding-3-small`)** for semantic memory indexing and retrieval quality
+- **Pinecone** for vector search infrastructure used by routing and conflict-detection workflows
+
 ## Challenges we ran into
 
 1. **Cross-system consistency:** Keeping PostgreSQL records, vector embeddings, and graph relationships synchronized demanded careful schema and workflow design.
