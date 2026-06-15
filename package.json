@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "demo:walkthrough": "bash scripts/demo-walkthrough.sh"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.50",

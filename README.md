@@ -167,6 +167,62 @@ Click **"Try the Demo"** on the landing page to explore with pre-seeded organiza
 
 ---
 
+## 🎬 How to run the demo walkthroughs
+
+A single command reseeds the three demo personas, launches a headed Chromium via Playwright, signs in as each persona, and writes fresh screenshots to `docs/demo-screenshots/`.
+
+### Prerequisites
+
+- Dev server running (`npm run dev`) — defaults to `http://localhost:8080`
+- Python 3 with Playwright installed: `pip install playwright && playwright install chromium`
+- `.env` populated with `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (auto-managed by Lovable Cloud)
+
+### One-shot command
+
+```bash
+# Headed (default) — opens a visible Chromium window on your laptop
+HEADED=1 npm run demo:walkthrough
+
+# Headless — for CI or sandboxed runs
+HEADED=0 npm run demo:walkthrough
+
+# Point at a non-default dev server
+BASE_URL=http://localhost:5173 HEADED=1 npm run demo:walkthrough
+```
+
+Under the hood this runs `scripts/demo-walkthrough.sh`, which:
+
+1. `POST`s to the `seed-personas` edge function to reseed mock data for all three orgs.
+2. Executes `docs/demo-screenshots/walkthrough.py` against the live dev server.
+
+### Expected screenshot outputs
+
+After a successful run you'll have **36 PNGs** (12 routes × 3 personas) plus a `manifest.json`:
+
+```
+docs/demo-screenshots/
+├── manifest.json
+├── student/   # Stanford CS Cohort  · student.demo@chiefofstaff.app
+├── pm/        # Northwind Product   · pm.demo@chiefofstaff.app
+└── founder/   # Lumen Robotics      · founder.demo@chiefofstaff.app
+    ├── 01-overview.png
+    ├── 02-projects.png
+    ├── 03-graph.png
+    ├── 04-agents.png
+    ├── 05-topics.png
+    ├── 06-teams.png
+    ├── 07-resources.png
+    ├── 08-calendar.png
+    ├── 09-messages.png
+    ├── 10-notifications.png
+    ├── 11-analytics.png
+    └── 12-settings.png
+```
+
+Demo password for all three logins: `Demo!2026` (override with `DEMO_PASSWORD=…`).
+
+---
+
 ## 🔑 Environment & Secrets
 
 The `.env` file is auto-managed by Lovable Cloud. Required backend secrets:
