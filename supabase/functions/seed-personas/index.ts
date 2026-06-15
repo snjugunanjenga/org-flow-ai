@@ -43,6 +43,15 @@ async function seedDailyVoiceAndMessages(ctx: SeedCtx, personaName: string) {
   const { supabase, orgId, adminUserId, memberIds } = ctx;
 
   const briefings: Record<string, { agent: string; title: string; body: string; type: string }[]> = {
+    "Apple": [
+      { agent: "coordinator", title: "Morning brief — Vision Pro 2 launch", body: "Hardware team locked Vision Pro 2 chassis. Marketing keynote draft ready for your review. Two open conflicts: pricing tier and EU launch date.", type: "info" },
+      { agent: "critic", title: "Conflict: pricing vs margin", body: "Marketing wants $2,999 entry; Finance modeled $3,499 minimum for 38% margin. Needs your call before keynote.", type: "warning" },
+      { agent: "router", title: "Jony Ive flagged glass thickness", body: "Routed to Hardware + Software Materials. Cross-team review scheduled for Thursday.", type: "info" },
+      { agent: "memory", title: "Captured: Q3 product council", body: "12 decisions, 4 risks, 3 dependencies — versioned and linked to Vision Pro 2 and macOS programs.", type: "success" },
+      { agent: "coordinator", title: "Daily brief — Tuesday", body: "Vision Pro 2 on track. macOS 27 RC1 build green. Risk: EU regulatory delay on USB-C ports. Recommend Legal sync today.", type: "info" },
+      { agent: "critic", title: "Stale decision: App Store policy", body: "Decision on third-party payment fees has not moved in 11 days. EU compliance window closing.", type: "warning" },
+      { agent: "coordinator", title: "Weekly recap", body: "5 product launches tracking, 1 keynote in 14 days, 2 conflicts resolved, 1 still open. Top of mind: pricing.", type: "success" },
+    ],
     "Stanford CS Cohort": [
       { agent: "coordinator", title: "Morning brief — Monday", body: "Good morning. Your highest-leverage tasks today: finish PSet 4 problem 3, then read Sculley et al. Section 4. Your advisor expects the methodology revision by Wednesday.", type: "info" },
       { agent: "critic", title: "Conflict in your calendar", body: "Your CS329S lab overlaps with your thesis advisor 1:1 on Thursday at 3pm. One must move.", type: "warning" },
