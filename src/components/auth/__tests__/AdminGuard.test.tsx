@@ -42,7 +42,8 @@ const renderGuard = () =>
 
 describe("AdminGuard (Super Admin protected route)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockUseAuth.mockReset();
+    mockMaybeSingle.mockReset();
   });
 
   it("shows loading spinner while resolving auth/role", () => {
