@@ -15,19 +15,18 @@ export function useDemoLogin() {
   const loginAs = async (p: DemoPersona) => {
     setLoadingSlug(p.slug);
     try {
-      let { error } = await signIn(p.email, p.password);
+      // Always ensure persona is seeded first (idempotent) to avoid noisy 400s
+      // from auth/v1/token when the account hasn't been provisioned yet.
+      toast({ title: `Preparing ${p.org}…`, description: "One moment." });
+      const { error: seedError } = await supabase.functions.invoke(p.seedFn, { body: {} });
+      if (seedError) {
+        toast({ variant: "destructive", title: "Demo unavailable", description: seedError.message });
+        return;
+      }
+      const { error } = await signIn(p.email, p.password);
       if (error) {
-        toast({ title: `Preparing ${p.org}…`, description: "Seeding demo data, one moment." });
-        const { error: seedError } = await supabase.functions.invoke(p.seedFn, { body: {} });
-        if (seedError) {
-          toast({ variant: "destructive", title: "Demo unavailable", description: seedError.message });
-          return;
-        }
-        ({ error } = await signIn(p.email, p.password));
-        if (error) {
-          toast({ variant: "destructive", title: "Demo unavailable", description: error.message });
-          return;
-        }
+        toast({ variant: "destructive", title: "Demo unavailable", description: error.message });
+        return;
       }
       const dest = p.slug === "admin" ? "/dashboard/admin" : "/dashboard";
       navigate(dest);
