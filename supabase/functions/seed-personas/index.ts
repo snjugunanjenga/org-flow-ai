@@ -223,6 +223,21 @@ async function seedStanford(ctx: SeedCtx) {
     { org_id: orgId, user_id: adminUserId, title: "Advisor replied to your thesis email", body: "Suggested two more references for the literature review.", type: "info", source_agent: "router" },
     { org_id: orgId, user_id: adminUserId, title: "Action item due tomorrow", body: "Finish PSet 4 problem 3 by 11:59pm.", type: "warning", source_agent: "critic" },
   ]);
+
+  // A personal "Senior Thesis" project so milestones surface for student persona too
+  const { data: thesis } = await supabase.from("projects").insert({
+    org_id: orgId, name: "Senior Thesis", description: "Sparse autoencoders for LLM interpretability.",
+    status: "active", progress: 35, owner_name: "Alex Student", team_name: "Research",
+    target_date: daysAgo(-60).slice(0, 10),
+  }).select("id").single();
+  if (thesis?.id) {
+    await supabase.from("project_milestones").insert([
+      { project_id: thesis.id, org_id: orgId, name: "Literature review", status: "done", target_date: daysAgo(30).slice(0, 10) },
+      { project_id: thesis.id, org_id: orgId, name: "Ablation across 4 widths", status: "in_progress", target_date: daysAgo(-7).slice(0, 10) },
+      { project_id: thesis.id, org_id: orgId, name: "Methodology revision", status: "pending", target_date: daysAgo(-14).slice(0, 10) },
+      { project_id: thesis.id, org_id: orgId, name: "Final draft to advisor", status: "pending", target_date: daysAgo(-45).slice(0, 10) },
+    ]);
+  }
 }
 
 // ── Persona 2: Northwind Product ─────────────────────────────────────────────
