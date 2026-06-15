@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Building2, Plug, Brain, Save, Loader2 } from "lucide-react";
 import { ConnectorsPanel } from "@/components/dashboard/ConnectorsPanel";
+import { GraphHealthBadge } from "@/components/dashboard/GraphHealthBadge";
 
 export default function SettingsView() {
   const { user } = useAuth();
