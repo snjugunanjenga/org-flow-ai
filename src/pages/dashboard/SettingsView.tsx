@@ -131,6 +131,11 @@ export default function SettingsView() {
         <TabsContent value="integrations" className="mt-6">
           <div className="glass-panel p-6 max-w-xl space-y-6">
             <ConnectorsPanel />
+            <div className="border-t border-border/40 pt-4">
+              <h3 className="text-lg font-semibold font-display mb-2">Knowledge graph health</h3>
+              <p className="text-xs text-muted-foreground mb-3">Live status of Neo4j (graph) and Pinecone (vector memory).</p>
+              <GraphHealthBadge />
+            </div>
             <div className="border-t border-border/40 pt-4 space-y-3">
             <h3 className="text-lg font-semibold font-display">Integrations</h3>
             <p className="text-sm text-muted-foreground mb-4">Connect your tools. API keys are managed securely via backend secrets.</p>
