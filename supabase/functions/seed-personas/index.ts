@@ -38,6 +38,98 @@ type SeedCtx = {
 const now = () => new Date();
 const daysAgo = (d: number) => new Date(Date.now() - d * 86400000).toISOString();
 
+// ── Shared: daily Coordinator voice briefings + cross-team DMs ──────────────
+async function seedDailyVoiceAndMessages(ctx: SeedCtx, personaName: string) {
+  const { supabase, orgId, adminUserId, memberIds } = ctx;
+
+  const briefings: Record<string, { agent: string; title: string; body: string; type: string }[]> = {
+    "Stanford CS Cohort": [
+      { agent: "coordinator", title: "Morning brief — Monday", body: "Good morning. Your highest-leverage tasks today: finish PSet 4 problem 3, then read Sculley et al. Section 4. Your advisor expects the methodology revision by Wednesday.", type: "info" },
+      { agent: "critic", title: "Conflict in your calendar", body: "Your CS329S lab overlaps with your thesis advisor 1:1 on Thursday at 3pm. One must move.", type: "warning" },
+      { agent: "router", title: "Jordan tagged you in lab notes", body: "Your labmate posted SAE ablation results — relevant to your thesis chapter 3.", type: "info" },
+      { agent: "memory", title: "Knowledge captured: 3 new sources", body: "Added 3 lecture PDFs and 1 paper to your ML Systems notebook.", type: "success" },
+      { agent: "coordinator", title: "Daily brief — Tuesday", body: "Pset progress: 60%. Thesis ablation queued for tonight. Interview prep slipping — schedule a mock for this weekend.", type: "info" },
+      { agent: "critic", title: "Stale action item", body: "‘Update résumé with thesis results’ has not moved in 8 days.", type: "warning" },
+      { agent: "coordinator", title: "Weekly recap", body: "This week you closed 4 of 6 high-priority items. Top blocker: SAE training compute. Next week focus: thesis intro draft.", type: "success" },
+    ],
+    "Northwind Product": [
+      { agent: "coordinator", title: "Morning brief — Checkout slip", body: "Checkout v3 is slipping 2 weeks. Finance should know before Friday's pricing review. I drafted a summary in #leadership for your approval.", type: "warning" },
+      { agent: "critic", title: "Decision conflict detected", body: "Engineering picked BigQuery; Finance flagged 18% cost overrun. Two contradictory decisions live in the graph.", type: "warning" },
+      { agent: "router", title: "Legal needs to see onboarding copy", body: "Design's friendly copy lacks compliance disclaimers. I routed the doc to Legal.", type: "info" },
+      { agent: "coordinator", title: "Daily brief — Tuesday", body: "5 cross-team threads need your input today. Top: GA4 rollout window collision with checkout launch. Recommend pushing GA4 by 1 week.", type: "info" },
+      { agent: "memory", title: "Captured 8 decisions from Monday's exec sync", body: "Versioned and linked to 3 active projects.", type: "success" },
+      { agent: "critic", title: "Headcount vs hiring freeze", body: "Two open senior eng reqs but Finance flagged a Q3 freeze rumor. Needs CEO clarification.", type: "warning" },
+      { agent: "coordinator", title: "Weekly recap", body: "3 decisions made, 2 conflicts resolved, 1 still open. Velocity on Checkout v3 down 15% week over week.", type: "info" },
+    ],
+    "Lumen Robotics": [
+      { agent: "coordinator", title: "Morning brief — FCC risk", body: "FCC certification is your single biggest risk this week. The consultant starts Monday but paperwork is 3 weeks behind. Recommend daily standup with Hugo until cleared.", type: "warning" },
+      { agent: "critic", title: "Pilot deploy vs firmware freeze", body: "Pilot deploy is scheduled 2 weeks BEFORE firmware v4.0 code freeze. One of these dates must move.", type: "warning" },
+      { agent: "router", title: "Series B — lead investor needs decision", body: "Lead investor expects your decision by July 30. I drafted a comparative term sheet summary in your Notes.", type: "info" },
+      { agent: "memory", title: "Knowledge captured: 5 meetings, 12 decisions", body: "Monday exec sync, firmware review, pilot standup, Series B pipeline, supply chain risk — all versioned.", type: "success" },
+      { agent: "coordinator", title: "Daily brief — Tuesday", body: "Atlas-1 prototype demo on track for Thursday. Supply chain dual-source complete. Single risk: FCC. Recommend founder attention today.", type: "info" },
+      { agent: "critic", title: "Customer C slipping", body: "Pilot customer C is at risk of slipping to October. Owen needs to confirm by Friday.", type: "warning" },
+      { agent: "coordinator", title: "Weekly recap", body: "Atlas-1 +12%, Firmware on track, Pilot 2/3 on track, Series B 3 term sheets, FCC AT RISK. Investor update draft ready for your review.", type: "success" },
+    ],
+  };
+
+  const list = briefings[personaName] || briefings["Lumen Robotics"];
+  // Insert one per day for the last 7 days, voice-enabled
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    await supabase.from("notifications").insert({
+      org_id: orgId, user_id: adminUserId,
+      title: b.title, body: b.body, type: b.type,
+      source_agent: b.agent, agent_type: b.agent,
+      voice_enabled: true,
+      reasoning: `${b.agent} agent synthesized this from the latest org signals.`,
+      created_at: daysAgo(list.length - 1 - i),
+      read: i < list.length - 2, // last 2 unread
+    });
+  }
+
+  // Rich DMs between admin and each member
+  const memberArr = Object.entries(memberIds);
+  const dmTemplates = [
+    "Heads up — the AI just flagged a conflict in our roadmap. Got 5 min?",
+    "Coordinator drafted a summary for the exec sync. Want me to send it?",
+    "Quick sync on the FCC paperwork tomorrow?",
+    "Loved your update — I'll route it to the rest of the leadership team.",
+    "Critic agent flagged a stale decision. Can you take a look?",
+    "Daily brief landed in my inbox — looks like we're on track 👍",
+  ];
+  for (const [, mid] of memberArr) {
+    for (let i = 0; i < 3; i++) {
+      const fromAdmin = i % 2 === 0;
+      await supabase.from("direct_messages").insert({
+        org_id: orgId,
+        sender_id: fromAdmin ? adminUserId : mid,
+        recipient_id: fromAdmin ? mid : adminUserId,
+        content: dmTemplates[(i + memberArr.length) % dmTemplates.length],
+        created_at: daysAgo(6 - i * 2),
+      });
+    }
+  }
+
+  // Channel messages already richer for Northwind; add a few for the other personas
+  if (personaName !== "Northwind Product") {
+    const channels = personaName === "Lumen Robotics"
+      ? ["#exec", "#hardware", "#firmware", "#ops"]
+      : ["#coursework", "#research", "#career"];
+    const senderNames = personaName === "Lumen Robotics"
+      ? ["Founder Demo", "Hugo Hardware", "Farah Firmware", "Owen Ops"]
+      : ["Alex Student", "Dr. Riya Patel", "Jordan Kim"];
+    for (let i = 0; i < 18; i++) {
+      await supabase.from("messages").insert({
+        org_id: orgId, source_type: "slack",
+        sender_name: senderNames[i % senderNames.length],
+        channel: channels[i % channels.length],
+        content: `Update #${i + 1} — ${personaName} status sync.`,
+        created_at: daysAgo(20 - i),
+      });
+    }
+  }
+}
+
 // ── Persona 1: Stanford CS Cohort ────────────────────────────────────────────
 async function seedStanford(ctx: SeedCtx) {
   const { supabase, orgId, adminUserId } = ctx;
