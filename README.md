@@ -1,6 +1,6 @@
 # 🧠 Superhuman AI Chief of Staff
 
-> **An AI-powered organizational intelligence platform that acts as your always-on Chief of Staff** — tracking decisions, routing knowledge, detecting conflicts, and providing a living source of truth across your entire organization.
+> **Your second brain for life, learning, and work.** Capture every source, ground every answer, surface every conflict, and route the right knowledge to the right person — for students, PMs, and founders alike.
 
 [![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4)](https://lovable.dev)
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react)](https://react.dev)
@@ -8,9 +8,21 @@
 [![Supabase](https://img.shields.io/badge/Backend-Supabase-3FCF8E?logo=supabase)](https://supabase.com)
 [![Challenge](https://img.shields.io/badge/Challenge%203-OpenAI%3A%20AI%20Chief%20of%20Staff-blueviolet)]()
 
-**🏆 4th Hack-Nation Global AI Hackathon · Challenge 3 – OpenAI: AI Chief of Staff**
+**🏆 USAII Global AI Hackathon 2026 — College Brief 3: Productivity / Second Brain**
+
+*(Previously: 4th Hack-Nation Global AI Hackathon · Challenge 3 – OpenAI: AI Chief of Staff)*
 
 **🌐 Live Demo:** [https://org-ai-chief-of-staff.lovable.app](https://org-ai-chief-of-staff.lovable.app)
+
+## Three personas, one product
+
+| Persona | Org | Login | Plan |
+|---|---|---|---|
+| Overloaded student / IC | Stanford CS Cohort | `student.demo@chiefofstaff.app` | free (trialing) |
+| Cross-team PM | Northwind Product | `pm.demo@chiefofstaff.app` | pro |
+| Founder / leader | Lumen Robotics | `founder.demo@chiefofstaff.app` | enterprise |
+
+Password for all demo logins: `Demo!2026`. Full submission packet: [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md).
 
 ---
 

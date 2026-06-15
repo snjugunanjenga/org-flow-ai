@@ -1,6 +1,25 @@
 
 # USAII Global AI Hackathon 2026 — Submission Plan
 
+## Status
+
+- [x] **Step 1** — `120x-architect-sub-agent` skill applied (`.workspace/skills/120x-architect-sub-agent/`).
+- [x] **Step 2 (partial)** — README hero reframed for Brief 3 with three-persona table.
+- [x] **Step 3** — `seed-personas` edge function deployed; three demo orgs live:
+  - Stanford CS Cohort (`student.demo@chiefofstaff.app`)
+  - Northwind Product (`pm.demo@chiefofstaff.app`)
+  - Lumen Robotics (`founder.demo@chiefofstaff.app`)
+  - Password: `Demo!2026`
+- [x] **Step 10 (partial)** — `docs/SUBMISSION-USAII.md` drafted with persona logins + Responsible-AI section.
+- [ ] **Step 2 (remaining)** — landing page hero, PersonaCards, footer copy refresh.
+- [ ] **Step 4** — Phase 2 intelligence wiring (Memory→Router→Critic→Coordinator live via AI SDK + Lovable AI Gateway).
+- [ ] **Step 5** — Phase 3 connectors (Slack + Gmail via Lovable Connector Gateway).
+- [ ] **Step 6** — Phase 4 voice + project status AI.
+- [ ] **Step 7** — Phase 5 tests + CI + Demo Mode toggle + mobile sweep.
+- [ ] **Step 8** — Playwright screenshot suite (24 shots, 3 orgs) → `docs/demo-screenshots/`.
+- [ ] **Step 9** — HeyGen demo + tech video production.
+- [ ] **Step 11** — final Devpost checklist + GitHub push.
+
 Target: **College Core Challenge — Brief 3: Productivity / "Second Brain" for Real Life**
 Window: June 14–21, 2026. Rubric: Technical Depth 33% · Creativity & Innovation 33% · Communication 33%.
 
