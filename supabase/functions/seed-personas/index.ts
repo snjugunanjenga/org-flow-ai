@@ -121,12 +121,18 @@ async function seedDailyVoiceAndMessages(ctx: SeedCtx, personaName: string) {
 
   // Channel messages already richer for Northwind; add a few for the other personas
   if (personaName !== "Northwind Product") {
-    const channels = personaName === "Lumen Robotics"
-      ? ["#exec", "#hardware", "#firmware", "#ops"]
-      : ["#coursework", "#research", "#career"];
-    const senderNames = personaName === "Lumen Robotics"
-      ? ["Founder Demo", "Hugo Hardware", "Farah Firmware", "Owen Ops"]
-      : ["Alex Student", "Dr. Riya Patel", "Jordan Kim"];
+    const channelMap: Record<string, string[]> = {
+      "Lumen Robotics": ["#exec", "#hardware", "#firmware", "#ops"],
+      "Apple": ["#keynote", "#hardware", "#software", "#marketing", "#design"],
+      "Stanford CS Cohort": ["#coursework", "#research", "#career"],
+    };
+    const senderMap: Record<string, string[]> = {
+      "Lumen Robotics": ["Founder Demo", "Hugo Hardware", "Farah Firmware", "Owen Ops"],
+      "Apple": ["Steve Jobs", "Tim Cook", "Jony Ive", "Craig Federighi", "Phil Schiller"],
+      "Stanford CS Cohort": ["Alex Student", "Dr. Riya Patel", "Jordan Kim"],
+    };
+    const channels = channelMap[personaName] ?? channelMap["Lumen Robotics"];
+    const senderNames = senderMap[personaName] ?? senderMap["Lumen Robotics"];
     for (let i = 0; i < 18; i++) {
       await supabase.from("messages").insert({
         org_id: orgId, source_type: "slack",
