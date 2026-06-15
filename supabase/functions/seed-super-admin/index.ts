@@ -29,6 +29,12 @@ Deno.serve(async (req) => {
     if (existing) {
       userId = existing.id;
       console.log("Super admin user already exists:", userId);
+      // Always reset the password + confirm email so the demo creds stay valid
+      // even if the row was created with a stale password earlier.
+      await supabase.auth.admin.updateUserById(userId, {
+        password,
+        email_confirm: true,
+      });
     } else {
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email,
