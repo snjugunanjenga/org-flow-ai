@@ -6,8 +6,13 @@ import { ArrowRight, Play, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-const DEMO_PASSWORD = "aqC!xeF2";
+// The "Try the Demo" button signs the visitor in as the founder persona
+// (Lumen Robotics — enterprise plan) so judges land in the richest demo org.
+// Credentials match supabase/functions/seed-personas/index.ts.
+const DEMO_EMAIL = "founder.demo@chiefofstaff.app";
+const DEMO_PASSWORD = "Demo!2026";
 
 const subtitles = [
   "Tracking every decision across your org",
@@ -25,16 +30,32 @@ export function HeroSection() {
   const handleTryDemo = async () => {
     setDemoLoading(true);
     try {
-      const { error } = await signIn("steve.jobs@apple.com", DEMO_PASSWORD);
+      let { error } = await signIn(DEMO_EMAIL, DEMO_PASSWORD);
+      // Self-heal: if the demo account doesn't exist yet, call the public
+      // seed-personas edge function once and retry. This way judges never
+      // hit a "demo unavailable" dead-end on a fresh environment.
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Demo unavailable",
-          description: "Demo data hasn't been seeded yet. Please contact the admin.",
-        });
-      } else {
-        navigate("/dashboard");
+        toast({ title: "Preparing demo…", description: "Seeding mock organizations, one moment." });
+        const { error: seedError } = await supabase.functions.invoke("seed-personas", { body: {} });
+        if (seedError) {
+          toast({
+            variant: "destructive",
+            title: "Demo unavailable",
+            description: "Could not seed demo data. Please contact the admin.",
+          });
+          return;
+        }
+        ({ error } = await signIn(DEMO_EMAIL, DEMO_PASSWORD));
+        if (error) {
+          toast({
+            variant: "destructive",
+            title: "Demo unavailable",
+            description: error.message ?? "Sign-in failed after seeding.",
+          });
+          return;
+        }
       }
+      navigate("/dashboard");
     } catch {
       toast({ variant: "destructive", title: "Error", description: "Could not start demo." });
     } finally {

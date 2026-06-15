@@ -35,6 +35,34 @@ function and redirects unauthenticated or non-admin users back to
 
 Full submission packet: [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md).
 
+#### One-shot reseed + login verification
+
+```bash
+npm run demo:seed
+```
+
+Runs [`scripts/seed-and-verify-demo.sh`](scripts/seed-and-verify-demo.sh):
+reseeds Stanford / Northwind / Lumen via the `seed-personas` edge function,
+(re)provisions the super admin via `seed-super-admin`, then hits
+`/auth/v1/token` for **every** judge account above and exits non-zero if
+any login fails. After it passes, judges can sign in at
+[`/auth`](https://org-ai-chief-of-staff.lovable.app/auth) with any row from
+the table and land directly in that persona's mock organization — the
+landing page's **Try the Demo** button signs in as the founder persona
+(Lumen Robotics) and auto-invokes `seed-personas` if the data is missing.
+
+#### Super Admin protected-route Playwright test
+
+```bash
+npm run demo:admin-test
+```
+
+Runs [`docs/demo-screenshots/super-admin-walkthrough.py`](docs/demo-screenshots/super-admin-walkthrough.py),
+which logs in as the super admin, walks every `/dashboard/admin` tab
+(analytics, organizations, subscriptions, newsletters, audit), asserts the
+`AdminGuard` does **not** redirect and no tab renders an "access denied"
+state, and writes screenshots to `docs/demo-screenshots/super-admin/`.
+
 ### 🚦 Submission status (June 14–21, 2026)
 
 | Phase | Scope | Status |
