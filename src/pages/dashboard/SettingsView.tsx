@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Building2, Plug, Brain, Save, Loader2 } from "lucide-react";
+import { ConnectorsPanel } from "@/components/dashboard/ConnectorsPanel";
 
 export default function SettingsView() {
   const { user } = useAuth();
@@ -127,7 +128,9 @@ export default function SettingsView() {
         </TabsContent>
 
         <TabsContent value="integrations" className="mt-6">
-          <div className="glass-panel p-6 max-w-xl space-y-4">
+          <div className="glass-panel p-6 max-w-xl space-y-6">
+            <ConnectorsPanel />
+            <div className="border-t border-border/40 pt-4 space-y-3">
             <h3 className="text-lg font-semibold font-display">Integrations</h3>
             <p className="text-sm text-muted-foreground mb-4">Connect your tools. API keys are managed securely via backend secrets.</p>
             {[
@@ -151,6 +154,7 @@ export default function SettingsView() {
             <p className="text-xs text-muted-foreground mt-2">
               Slack and Google integrations require API keys. Contact your admin to configure credentials.
             </p>
+            </div>
           </div>
         </TabsContent>
 
