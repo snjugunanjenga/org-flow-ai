@@ -39,6 +39,14 @@ export default function AgentsView() {
   useEffect(() => {
     if (!orgId) return;
     supabase.from("agent_logs").select("*").eq("org_id", orgId).order("created_at", { ascending: false }).limit(50).then(({ data }) => setLogs(data || []));
+
+    const channel = supabase
+      .channel(`agent-logs-${orgId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "agent_logs", filter: `org_id=eq.${orgId}` }, (payload) => {
+        setLogs((prev) => [payload.new as AgentLog, ...prev].slice(0, 50));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [orgId]);
 
   const logsByAgent = (type: string) => logs.filter(l => l.agent_type === type);

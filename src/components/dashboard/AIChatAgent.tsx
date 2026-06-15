@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  trace?: Array<{ agent: string; action: string; output: string }>;
 }
 
 const STORAGE_KEY = "ai-cos-chat-enabled";
@@ -76,7 +77,7 @@ export function AIChatAgent() {
       });
       if (error) throw error;
       const assistantContent = data?.choices?.[0]?.message?.content || "I couldn't process that. Please try again.";
-      setMessages(prev => [...prev, { role: "assistant", content: assistantContent }]);
+      setMessages(prev => [...prev, { role: "assistant", content: assistantContent, trace: data?.trace ?? [] }]);
     } catch (err: any) {
       console.error("AI chat error:", err);
       setMessages(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
@@ -148,6 +149,13 @@ export function AIChatAgent() {
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted/60 text-foreground rounded-bl-sm"}`}>
                     <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.trace && msg.trace.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {msg.trace.map((t, j) => (
+                          <span key={j} className={`text-[10px] px-1.5 py-0.5 rounded ${t.agent === "memory" ? "bg-[hsl(var(--agent-memory))]/15 text-[hsl(var(--agent-memory))]" : t.agent === "router" ? "bg-[hsl(var(--agent-router))]/15 text-[hsl(var(--agent-router))]" : t.agent === "critic" ? "bg-[hsl(var(--agent-critic))]/15 text-[hsl(var(--agent-critic))]" : "bg-[hsl(var(--agent-coordinator))]/15 text-[hsl(var(--agent-coordinator))]"}`}>{t.agent}·{t.action}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

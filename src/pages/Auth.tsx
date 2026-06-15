@@ -79,7 +79,7 @@ const Auth = () => {
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
-        toast({ variant: "destructive", title: "Validation error", description: err.errors[0].message });
+        toast({ variant: "destructive", title: "Validation error", description: err.issues[0].message });
       }
     } finally {
       setLoading(false);
