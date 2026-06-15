@@ -25,7 +25,7 @@ function deriveConfidence(trace: Array<{ agent: string; action: string; output: 
   let score = 0.5 + Math.min(memoryHits * 0.1, 0.3) + Math.min((agents.size - (memoryHits > 0 ? 1 : 0)) * 0.07, 0.2);
   if (criticHits > 0) score = Math.min(score + 0.05, 0.95);
   score = Math.min(Math.max(score, 0), 1);
-  const level = score >= 0.82 ? "high" : score >= 0.65 ? "med" : "low";
+  const level: "high" | "med" | "low" = score >= 0.82 ? "high" : score >= 0.65 ? "med" : "low";
   const reason =
     level === "high"
       ? `Grounded in ${memoryHits} memory retrievals across ${agents.size} agents.`
