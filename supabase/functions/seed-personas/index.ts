@@ -387,6 +387,26 @@ async function seedLumen(ctx: SeedCtx) {
 // ── Persona registry ─────────────────────────────────────────────────────────
 const PERSONAS: PersonaSpec[] = [
   {
+    slug: "apple",
+    name: "Apple",
+    plan: "enterprise",
+    status: "active",
+    admin: { email: "steve.jobs@apple.com", name: "Steve Jobs", role: "admin", dept: "Executive", title: "CEO" },
+    members: [
+      { email: "tim.cook@apple.com", name: "Tim Cook", role: "manager", dept: "Operations", title: "COO" },
+      { email: "jony.ive@apple.com", name: "Jony Ive", role: "manager", dept: "Design", title: "SVP Design" },
+      { email: "craig.federighi@apple.com", name: "Craig Federighi", role: "manager", dept: "Software", title: "SVP Software" },
+      { email: "phil.schiller@apple.com", name: "Phil Schiller", role: "manager", dept: "Marketing", title: "SVP Marketing" },
+    ],
+    teams: [
+      { name: "Hardware", color: "#f59e0b", description: "Industrial design and silicon." },
+      { name: "Software", color: "#6366f1", description: "macOS, iOS, visionOS." },
+      { name: "Design", color: "#ec4899", description: "Industrial + interaction design." },
+      { name: "Marketing", color: "#10b981", description: "Keynotes, launch, brand." },
+    ],
+    seed: seedApple,
+  },
+  {
     slug: "stanford-cs",
     name: "Stanford CS Cohort",
     plan: "free",
