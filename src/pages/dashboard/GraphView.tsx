@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MindMapCanvas } from "@/components/graph/MindMapCanvas";
 import { ChevronDown } from "lucide-react";
+import { GraphDemoTestPanel } from "@/components/dashboard/GraphDemoTestPanel";
 
 interface GraphEdge {
   id: string;
@@ -79,6 +80,8 @@ export default function GraphView() {
         <h1 className="text-3xl font-bold font-display">Knowledge Graph</h1>
         <p className="text-muted-foreground mt-1">{nodes.length} entities, {edges.length} relationships</p>
       </div>
+
+      <GraphDemoTestPanel />
 
       <div className="flex gap-2 flex-wrap">
         {types.map(t => (
