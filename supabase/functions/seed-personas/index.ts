@@ -404,9 +404,16 @@ async function seedApple(ctx: SeedCtx) {
     { name: "EU USB-C Compliance", team_name: "Software", progress: 35, status: "at_risk" },
   ];
   for (const p of projects) {
-    await supabase.from("projects").insert({
+    const { data } = await supabase.from("projects").insert({
       org_id: orgId, owner_name: "Steve Jobs", description: p.name + " program plan", ...p,
-    });
+    }).select("id").single();
+    if (data?.id) {
+      await supabase.from("project_milestones").insert([
+        { project_id: data.id, org_id: orgId, name: `${p.name} — design lock`, status: "done", target_date: daysAgo(60).slice(0, 10) },
+        { project_id: data.id, org_id: orgId, name: `${p.name} — engineering complete`, status: "in_progress", target_date: daysAgo(-14).slice(0, 10) },
+        { project_id: data.id, org_id: orgId, name: `${p.name} — keynote-ready`, status: "pending", target_date: daysAgo(-45).slice(0, 10) },
+      ]);
+    }
   }
 
   const decisions = [
