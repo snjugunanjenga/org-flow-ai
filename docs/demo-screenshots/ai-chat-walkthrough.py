@@ -53,7 +53,7 @@ async def main():
             await page.screenshot(path=str(OUT / "1_chat_open.png"))
 
             # Type a prompt and submit
-            textbox = page.get_by_placeholder("Ask anything", exact=False).first
+            textbox = page.get_by_placeholder("Ask your AI Chief of Staff", exact=False).first
             await textbox.fill("What's the status of our top project?")
             await page.screenshot(path=str(OUT / "2_chat_input.png"))
             await textbox.press("Enter")
