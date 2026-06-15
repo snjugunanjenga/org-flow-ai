@@ -2,7 +2,7 @@
 // extract entities via the Memory Agent, upsert to Pinecone, and trigger Router + Critic.
 // Idempotent on (org_id, source_hash).
 import { generateText, Output } from "npm:ai";
-import { z } from "npm:zod@3.23.8";
+import { z } from "npm:zod@3.25.76";
 import { corsHeaders, embedText, jsonResponse, logAgent, requireUser, sha256Hex } from "../_shared/auth.ts";
 import { createLovableAiGatewayProvider } from "../_shared/ai-gateway.ts";
 

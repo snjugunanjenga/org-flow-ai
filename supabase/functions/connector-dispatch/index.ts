@@ -4,7 +4,7 @@
 // so the demo stays resilient.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { z } from "npm:zod@3.23.8";
+import { z } from "npm:zod@3.25.76";
 
 const Body = z.object({
   channel: z.enum(["slack", "gmail"]),

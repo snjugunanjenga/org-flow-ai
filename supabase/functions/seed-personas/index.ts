@@ -579,6 +579,9 @@ async function ensureUser(supabase: any, m: Member): Promise<string> {
   let uid: string;
   if (existing) {
     uid = existing.id;
+    // Ensure the demo password is current — earlier seeds may have used a
+    // different password and we want demo logins to be deterministic.
+    await supabase.auth.admin.updateUserById(uid, { password: PASSWORD, email_confirm: true });
   } else {
     const { data: created, error } = await supabase.auth.admin.createUser({
       email: m.email, password: PASSWORD, email_confirm: true,

@@ -1,44 +1,32 @@
+## Root cause
 
-## 1. Persona switcher on hero (frontend)
+Edge function logs show `ai-agent loop error: schema is not a function`. This is thrown by `npm:ai` (AI SDK v5) when it tries to invoke the Standard Schema `~standard.validate` interface on the tool `inputSchema`. Zod added Standard Schema support in **3.25**, but the edge functions pin `npm:zod@3.23.8`. So every tool call fails immediately and the loop returns 500, which is what the browser sees as `FunctionsHttpError`.
 
-- `HeroSection.tsx`: add a 4-option persona picker (Founder / PM / Student / Super Admin) next to "Try the Demo". Selecting one signs in with the matching seeded credentials and lands in that mock org.
-- `PersonaCards.tsx`: convert each card into an "Enter as {persona}" CTA that performs the same login.
-- Self-heal already in place (invokes `seed-personas` on first failure) covers all four accounts.
+Affected files (all pin the old zod):
+- `supabase/functions/ai-agent/index.ts`
+- `supabase/functions/agent-ingest/index.ts`
+- `supabase/functions/connector-dispatch/index.ts`
 
-## 2. Voice conversational AI notifications
+## Fix
 
-- **Connector**: link ElevenLabs standard connector → `ELEVENLABS_API_KEY` server-side.
-- **Edge function `voice-notification`**: takes `notification_id`, fetches text, calls ElevenLabs TTS (`eleven_turbo_v2_5`, voice = Sarah), returns MP3 bytes. Auth-gated.
-- **Edge function `voice-agent-token`**: mints an ElevenLabs Conversational Agent WebRTC token so users can talk back to the Coordinator agent from the bell.
-- **UI**: extend `NotificationsView.tsx` with a ▶︎ play button per notification + a "Talk to Coordinator" mic button using `@elevenlabs/react` `useConversation`.
+1. Bump the zod specifier from `npm:zod@3.23.8` → `npm:zod@3.25.76` in the three files above. No code changes needed — the `z.object/z.string/...` API is identical, this just unlocks Standard Schema so AI SDK v5 can validate tool inputs and `Output.object` schemas.
+2. Redeploy `ai-agent`, `agent-ingest`, `connector-dispatch` and verify `ai-agent` returns 200 by calling it via `supabase--curl_edge_functions` with a minimal `{ messages: [{ role:"user", content:"hi" }] }`.
+3. Check `supabase--edge_function_logs` for `ai-agent` — the `schema is not a function` line should be gone.
 
-## 3. Daily voice notifications (mock + live)
+## Playwright test for the conversational AI
 
-- **Mock seed**: extend `seed-personas` to insert 7 days of agent-authored notifications and messages per persona (mix of Memory/Router/Critic/Coordinator, with `voice_enabled=true` flag).
-- **Migration**: add `voice_enabled boolean default false` and `voice_audio_url text` columns to `notifications`.
-- **Live**: new edge function `daily-voice-digest` generates one Coordinator briefing per active user per day. Schedule via `pg_cron` at 08:00 UTC using `pg_net.http_post`.
+Add `docs/demo-screenshots/ai-chat-walkthrough.py` (headed Chromium, screenshots into `/tmp/browser/ai-chat/`). Flow:
 
-## 4. Knowledge graph + Neo4j/Pinecone health
+1. Launch `chromium.launch(headless=False)` with viewport 1280×1800.
+2. Seed + sign in as the Steve Jobs demo persona by invoking `seed-personas` then `signInWithPassword` directly via the Supabase REST endpoint (reuse pattern from `voice-walkthrough.py`).
+3. Navigate to `/dashboard`, open the AI Chat Agent (floating brain icon → `VoiceCoordinatorButton`/`AIChatAgent`), screenshot `1_chat_open.png`.
+4. Type "What's the status of our top project?" and press Enter. Wait for an assistant message to appear (poll the DOM for the second `[data-role="assistant"]` bubble or the streamed text node).
+5. Screenshot `2_chat_response.png` and assert no `AI chat error` shows in the visible toast region.
+6. Capture `page.on("console")` errors and `page.on("response")` for `/functions/v1/ai-agent` — assert status 200.
+7. Close browser, print pass/fail summary.
 
-- **Edge function `graph-healthcheck`**: pings Neo4j (`RETURN 1`) and Pinecone (`describe_index_stats` on org namespace), returns `{neo4j: ok|fail, pinecone: ok|fail, latency_ms}`.
-- **UI badge**: small status pill in `SettingsView` ("Integrations") and `AdminView` ("System health") that polls the healthcheck every 30s.
-- **Seed real graph data**: extend `seed-personas` to push ~20 nodes/edges into Neo4j and ~20 embeddings into Pinecone per demo org so `/dashboard/graph` renders non-empty data for judges.
-- **Playwright** (`docs/demo-screenshots/graph-walkthrough.py`): for each persona logs in, opens `/dashboard/graph`, waits for canvas nodes, asserts >0 rendered, screenshots `graph-{persona}.png`. Added to `scripts/demo-walkthrough.sh`.
+Run it with `python docs/demo-screenshots/ai-chat-walkthrough.py` after the zod fix is deployed, then view screenshots to confirm the bot replied. No app/source code changes are needed for the test itself beyond adding the script.
 
-## 5. Updated mock messages
+## Out of scope
 
-- `seed-personas` also inserts 10–15 `direct_messages` and `messages` per persona with realistic content tied to their org's projects, so DM/Messages views are populated.
-
-## 6. Wiring & docs
-
-- `package.json`: add `demo:voice-test` (curls `voice-notification` for each persona) and `demo:graph-health`.
-- `README.md`: document ElevenLabs setup, new persona switcher, voice features, graph health endpoint, cron schedule.
-
-## Technical details
-
-- New tables/columns: `notifications.voice_enabled`, `notifications.voice_audio_url`, `notifications.agent_type` (if missing).
-- `pg_cron` + `pg_net` enabled in a migration; cron row inserted via `supabase--insert` (per scheduling guidance — not migration — to keep keys per-project).
-- ElevenLabs voice IDs: Sarah `EXAVITQu4vr4xnSDxMaL` (Memory/Coordinator), George `JBFqnCBsd6RMkjVDRZzb` (Router), Charlie `IKne3meq5aSn9XLyUdCD` (Critic).
-- `@elevenlabs/react` added via `bun add`.
-- Health check function uses existing `NEO4J_*` and `PINECONE_*` secrets.
-- All new edge functions: CORS headers, JWT validation, Zod input schemas.
+The `iframe-pos` warning and `App update check` logs come from the Lovable dev shell and are noise — no action.
