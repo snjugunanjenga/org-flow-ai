@@ -385,6 +385,116 @@ async function seedLumen(ctx: SeedCtx) {
 }
 
 // ── Persona registry ─────────────────────────────────────────────────────────
+// ── Persona: Apple (Steve Jobs) ──────────────────────────────────────────────
+async function seedApple(ctx: SeedCtx) {
+  const { supabase, orgId, adminUserId } = ctx;
+
+  const projects = [
+    { name: "Vision Pro 2", team_name: "Hardware", progress: 60, status: "active" },
+    { name: "macOS 27", team_name: "Software", progress: 80, status: "active" },
+    { name: "iPhone Air", team_name: "Hardware", progress: 45, status: "active" },
+    { name: "Q4 Keynote", team_name: "Marketing", progress: 70, status: "active" },
+    { name: "EU USB-C Compliance", team_name: "Software", progress: 35, status: "at_risk" },
+  ];
+  for (const p of projects) {
+    await supabase.from("projects").insert({
+      org_id: orgId, owner_name: "Steve Jobs", description: p.name + " program plan", ...p,
+    });
+  }
+
+  const decisions = [
+    "Lock Vision Pro 2 chassis dimensions",
+    "Ship macOS 27 with Apple Intelligence on-device",
+    "Price Vision Pro 2 at $3,499",
+    "Keynote staged at Steve Jobs Theater",
+    "Deprecate Intel macOS builds",
+    "Adopt USB-C across all EU SKUs",
+    "Open third-party payment in EU only",
+  ];
+  for (const t of decisions) {
+    await supabase.from("topics").insert({
+      org_id: orgId, title: t, category: "decision", status: "decided",
+      priority: "high", source_type: "meeting", owner_name: "Steve Jobs",
+    });
+  }
+
+  await supabase.from("conflicts").insert([
+    { org_id: orgId, title: "Pricing vs margin on Vision Pro 2", description: "Marketing wants $2,999 entry; Finance needs $3,499 minimum.", severity: "high", status: "open", parties: ["Marketing", "Finance"], detected_by: "critic" },
+    { org_id: orgId, title: "EU USB-C launch date", description: "Hardware ready Sept 12; Legal flags compliance window.", severity: "medium", status: "open", parties: ["Hardware", "Legal"], detected_by: "critic" },
+  ]);
+
+  const meetings = [
+    { title: "Product Council", summary: "Vision Pro 2 chassis locked. Pricing tabled.", decisions: ["Lock chassis"], sentiment: "positive" },
+    { title: "Keynote Dry Run", summary: "Steve walked through 7 demos; cut 2.", decisions: ["Cut Watch segment"], sentiment: "neutral" },
+    { title: "EU Regulatory Sync", summary: "USB-C compliance and DMA payment rules.", decisions: ["Open third-party payment EU only"], sentiment: "cautious" },
+  ];
+  for (let i = 0; i < 12; i++) {
+    const m = meetings[i % meetings.length];
+    await supabase.from("meeting_summaries").insert({
+      org_id: orgId, title: `${m.title} — Week ${i + 1}`, summary: m.summary,
+      key_decisions: m.decisions,
+      action_items: [{ assignee: "Steve Jobs", task: "Approve and broadcast", due: daysAgo(-3).slice(0, 10) }],
+      sentiment: m.sentiment, created_at: daysAgo(30 - i * 2),
+    });
+  }
+}
+
+// ── Shared: knowledge graph edges so every persona has a visible graph ───────
+async function seedGraphEdges(ctx: SeedCtx, personaName: string) {
+  const { supabase, orgId } = ctx;
+  const { count } = await supabase
+    .from("graph_edges").select("id", { count: "exact", head: true }).eq("org_id", orgId);
+  if ((count ?? 0) > 0) return;
+
+  const edgeSets: Record<string, { source_type: string; source_label: string; target_type: string; target_label: string; relationship: string }[]> = {
+    "Apple": [
+      { source_type: "person", source_label: "Steve Jobs", target_type: "project", target_label: "Vision Pro 2", relationship: "owns" },
+      { source_type: "person", source_label: "Tim Cook", target_type: "project", target_label: "EU USB-C Compliance", relationship: "owns" },
+      { source_type: "person", source_label: "Jony Ive", target_type: "project", target_label: "Vision Pro 2", relationship: "designs" },
+      { source_type: "person", source_label: "Craig Federighi", target_type: "project", target_label: "macOS 27", relationship: "owns" },
+      { source_type: "person", source_label: "Phil Schiller", target_type: "project", target_label: "Q4 Keynote", relationship: "owns" },
+      { source_type: "project", source_label: "Vision Pro 2", target_type: "decision", target_label: "Price at $3,499", relationship: "blocked_by" },
+      { source_type: "project", source_label: "macOS 27", target_type: "decision", target_label: "On-device Apple Intelligence", relationship: "depends_on" },
+      { source_type: "meeting", source_label: "Product Council", target_type: "decision", target_label: "Lock chassis", relationship: "produced" },
+      { source_type: "meeting", source_label: "Keynote Dry Run", target_type: "project", target_label: "Q4 Keynote", relationship: "advanced" },
+      { source_type: "topic", source_label: "EU DMA compliance", target_type: "project", target_label: "EU USB-C Compliance", relationship: "drives" },
+      { source_type: "person", source_label: "Steve Jobs", target_type: "meeting", target_label: "Product Council", relationship: "chaired" },
+      { source_type: "person", source_label: "Phil Schiller", target_type: "meeting", target_label: "Keynote Dry Run", relationship: "attended" },
+    ],
+    "Lumen Robotics": [
+      { source_type: "person", source_label: "Founder Demo", target_type: "project", target_label: "Atlas-1 Prototype", relationship: "owns" },
+      { source_type: "person", source_label: "Hugo Hardware", target_type: "project", target_label: "FCC Certification", relationship: "owns" },
+      { source_type: "person", source_label: "Farah Firmware", target_type: "project", target_label: "Firmware 4.0", relationship: "owns" },
+      { source_type: "project", source_label: "Atlas-1 Prototype", target_type: "decision", target_label: "Pin v4.0 for pilot", relationship: "depends_on" },
+      { source_type: "meeting", source_label: "Monday Exec Sync", target_type: "decision", target_label: "Hire FCC consultant", relationship: "produced" },
+      { source_type: "project", source_label: "FCC Certification", target_type: "topic", target_label: "Regulatory risk", relationship: "tagged" },
+      { source_type: "person", source_label: "Owen Ops", target_type: "project", target_label: "Pilot Customer Deployment", relationship: "owns" },
+      { source_type: "person", source_label: "Fiona Finance", target_type: "project", target_label: "Series B Raise", relationship: "owns" },
+    ],
+    "Northwind Product": [
+      { source_type: "person", source_label: "PM Demo", target_type: "project", target_label: "Checkout v3", relationship: "owns" },
+      { source_type: "person", source_label: "Priya Engineering", target_type: "project", target_label: "Data Platform Migration", relationship: "owns" },
+      { source_type: "person", source_label: "Diego Design", target_type: "project", target_label: "Mobile Onboarding", relationship: "owns" },
+      { source_type: "person", source_label: "Marta GTM", target_type: "project", target_label: "Pricing Refresh", relationship: "owns" },
+      { source_type: "project", source_label: "Checkout v3", target_type: "decision", target_label: "Adopt Stripe Elements", relationship: "depends_on" },
+      { source_type: "project", source_label: "Data Platform Migration", target_type: "decision", target_label: "Pick BigQuery", relationship: "depends_on" },
+      { source_type: "topic", source_label: "BigQuery cost overrun", target_type: "project", target_label: "Data Platform Migration", relationship: "risks" },
+    ],
+    "Stanford CS Cohort": [
+      { source_type: "person", source_label: "Alex Student", target_type: "topic", target_label: "Senior Thesis", relationship: "owns" },
+      { source_type: "person", source_label: "Dr. Riya Patel", target_type: "topic", target_label: "Senior Thesis", relationship: "advises" },
+      { source_type: "person", source_label: "Jordan Kim", target_type: "topic", target_label: "SAE ablation", relationship: "collaborates" },
+      { source_type: "topic", source_label: "Senior Thesis", target_type: "decision", target_label: "Run ablation on 4 widths", relationship: "depends_on" },
+      { source_type: "topic", source_label: "Interview Prep", target_type: "topic", target_label: "System design", relationship: "covers" },
+    ],
+  };
+
+  const edges = edgeSets[personaName] ?? [];
+  for (const e of edges) {
+    await supabase.from("graph_edges").insert({ org_id: orgId, ...e, weight: 1.0 });
+  }
+}
+
 const PERSONAS: PersonaSpec[] = [
   {
     slug: "apple",
