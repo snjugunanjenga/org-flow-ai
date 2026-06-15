@@ -4,23 +4,23 @@ import { Network, Brain, Mic } from "lucide-react";
 const propositions = [
   {
     icon: Network,
-    title: "Knowledge Graph",
+    title: "Second Brain Knowledge Graph",
     description:
-      "Interactive 3D visualization of your entire organizational knowledge — people, decisions, topics, and projects, all connected.",
+      "Every decision, meeting, person, and project becomes a versioned node in an interactive 3D graph — your living source of truth.",
     color: "text-graph-topic",
   },
   {
     icon: Brain,
-    title: "Multi-Agent Intelligence",
+    title: "Four-Agent Chief of Staff",
     description:
-      "Four specialized AI agents extract, route, critique, and coordinate organizational knowledge in real-time.",
+      "Memory captures, Router targets stakeholders, Critic flags conflicts, Coordinator plans — each answer carries a confidence chip you can verify.",
     color: "text-agent-coordinator",
   },
   {
     icon: Mic,
-    title: "Voice Interaction",
+    title: "Voice + Human-in-the-Loop",
     description:
-      "Full-duplex voice commands to query your knowledge graph, get briefings, and draft communications hands-free.",
+      "Talk to your Second Brain hands-free. Every proposed plan ships with Accept / Skip so you stay in control.",
     color: "text-agent-memory",
   },
 ];
