@@ -35,6 +35,17 @@ function and redirects unauthenticated or non-admin users back to
 
 Full submission packet: [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md).
 
+### 🎙️ Voice notifications + persona switcher (new)
+
+- The landing hero exposes a **4-button persona switcher** (Founder / PM / Student / Super Admin) plus a CTA on each persona card. One click signs in and lands judges in the matching mock org — `seed-personas` auto-runs on first failure.
+- Each notification carries an **agent voice** (ElevenLabs). The bell page now has a ▶︎ *Play voice* button per item and a *Talk to Coordinator* mic that opens a full-duplex ElevenLabs Conversational AI session.
+- Mock data includes **7 days of daily agent briefings** per persona, voice-enabled, plus seeded DMs and channel messages.
+- Voice requires the ElevenLabs connector (auto-linked, `ELEVENLABS_API_KEY`). For *Talk to Coordinator* set `ELEVENLABS_AGENT_ID` to a Conversational Agent created in your ElevenLabs dashboard.
+
+### 🧠 Knowledge graph health
+
+The `graph-healthcheck` edge function pings **Neo4j** (`RETURN 1`) and **Pinecone** (`describe_index_stats`) and returns latency + status. Surfaced as a live badge in **Settings → Integrations → Knowledge graph health** (auto-refresh every 30s, click to recheck).
+
 #### One-shot reseed + login verification
 
 ```bash

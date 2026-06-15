@@ -719,6 +719,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          agent_type: string | null
           body: string
           created_at: string
           id: string
@@ -729,8 +730,11 @@ export type Database = {
           title: string
           type: string | null
           user_id: string
+          voice_audio_url: string | null
+          voice_enabled: boolean
         }
         Insert: {
+          agent_type?: string | null
           body: string
           created_at?: string
           id?: string
@@ -741,8 +745,11 @@ export type Database = {
           title: string
           type?: string | null
           user_id: string
+          voice_audio_url?: string | null
+          voice_enabled?: boolean
         }
         Update: {
+          agent_type?: string | null
           body?: string
           created_at?: string
           id?: string
@@ -753,6 +760,8 @@ export type Database = {
           title?: string
           type?: string | null
           user_id?: string
+          voice_audio_url?: string | null
+          voice_enabled?: boolean
         }
         Relationships: [
           {
