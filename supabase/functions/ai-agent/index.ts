@@ -6,7 +6,7 @@
 //   invoke_critic  → flag conflicts and stale decisions
 // Every tool execution writes a row to agent_logs so the UI can render the trace.
 import { generateText, stepCountIs, tool } from "npm:ai";
-import { z } from "npm:zod@3.23.8";
+import { z } from "npm:zod@3.25.76";
 import { corsHeaders, embedText, jsonResponse, logAgent, requireUser } from "../_shared/auth.ts";
 import { createLovableAiGatewayProvider } from "../_shared/ai-gateway.ts";
 
