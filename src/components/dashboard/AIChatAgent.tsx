@@ -172,6 +172,23 @@ export function AIChatAgent() {
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted/60 text-foreground rounded-bl-sm"}`}>
                     <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.role === "assistant" && msg.confidence && (
+                      <div className="mt-2 flex items-center gap-1.5" title={msg.confidence.reason}>
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${
+                            msg.confidence.level === "high"
+                              ? "bg-accent/15 text-accent border-accent/30"
+                              : msg.confidence.level === "med"
+                              ? "bg-primary/15 text-primary border-primary/30"
+                              : "bg-destructive/15 text-destructive border-destructive/30"
+                          }`}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {msg.confidence.level === "high" ? "High confidence" : msg.confidence.level === "med" ? "Medium confidence" : "Low — verify"}
+                          <span className="opacity-70">· {(msg.confidence.score * 100).toFixed(0)}%</span>
+                        </span>
+                      </div>
+                    )}
                     {msg.trace && msg.trace.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {msg.trace.map((t, j) => (
