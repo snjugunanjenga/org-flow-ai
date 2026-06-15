@@ -1,0 +1,455 @@
+// Seeds three demo organizations for the USAII Brief 3 submission:
+//   1. Stanford CS Cohort   — student / IC persona  (plan: free trialing)
+//   2. Northwind Product    — cross-team PM persona (plan: pro)
+//   3. Lumen Robotics       — founder / leader      (plan: enterprise)
+// Idempotent: re-running upserts users, org, memberships, teams, and
+// only inserts rich data when the org has no messages yet.
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const PASSWORD = "Demo!2026";
+
+type Member = { email: string; name: string; role: "admin" | "manager" | "member"; dept: string; title: string };
+
+type PersonaSpec = {
+  slug: string;
+  name: string;
+  plan: "free" | "pro" | "enterprise";
+  status: "trialing" | "active";
+  admin: Member;
+  members: Member[];
+  teams: { name: string; color: string; description: string }[];
+  seed: (ctx: SeedCtx) => Promise<void>;
+};
+
+type SeedCtx = {
+  supabase: ReturnType<typeof createClient>;
+  orgId: string;
+  adminUserId: string;
+  memberIds: Record<string, string>;
+  daysAgo: (n: number) => string;
+};
+
+const now = () => new Date();
+const daysAgo = (d: number) => new Date(Date.now() - d * 86400000).toISOString();
+
+// ── Persona 1: Stanford CS Cohort ────────────────────────────────────────────
+async function seedStanford(ctx: SeedCtx) {
+  const { supabase, orgId, adminUserId } = ctx;
+
+  const notebooks = [
+    { title: "Algorithms — CS161", description: "Course notes, problem sets, and exam prep." },
+    { title: "ML Systems — CS329S", description: "Production ML papers and lab notes." },
+    { title: "Senior Thesis", description: "Sparse autoencoders for LLM interpretability." },
+    { title: "Interview Prep", description: "Coding patterns, system design, behavioral stories." },
+  ];
+  const notebookIds: string[] = [];
+  for (const nb of notebooks) {
+    const { data } = await supabase.from("resource_notebooks").insert({
+      org_id: orgId, title: nb.title, description: nb.description, created_by: adminUserId,
+    }).select("id").single();
+    if (data) notebookIds.push(data.id);
+  }
+
+  const sources = [
+    { nb: 0, type: "pdf", title: "Lecture 7 — Dynamic Programming", content: "Bellman's principle of optimality and longest common subsequence derivation." },
+    { nb: 0, type: "url", title: "CLRS Chapter 15 notes", content: "Memoization vs tabulation comparison with runtime analysis." },
+    { nb: 0, type: "pdf", title: "Problem Set 4 solutions", content: "Knapsack, edit distance, matrix chain multiplication." },
+    { nb: 1, type: "pdf", title: "Hidden Technical Debt in ML Systems", content: "Sculley et al. NeurIPS 2015 — feedback loops, glue code, configuration debt." },
+    { nb: 1, type: "url", title: "MLOps maturity model", content: "Google's three-level maturity model for production ML pipelines." },
+    { nb: 1, type: "pdf", title: "Lab 3: feature store design", content: "Offline/online consistency and point-in-time correctness." },
+    { nb: 2, type: "pdf", title: "Sparse Autoencoders for Interpretability — Anthropic", content: "Dictionary learning over residual stream activations recovers monosemantic features." },
+    { nb: 2, type: "pdf", title: "Toy Models of Superposition", content: "Linear representation hypothesis and capacity tradeoffs." },
+    { nb: 2, type: "url", title: "Advisor feedback — methodology section", content: "Strengthen ablation; cite baseline reconstruction loss; add scaling curve." },
+    { nb: 3, type: "pdf", title: "Cracking the Coding Interview — graph patterns", content: "BFS/DFS templates, topological sort, union-find variations." },
+    { nb: 3, type: "url", title: "System design primer — rate limiter", content: "Token bucket, leaky bucket, sliding window log tradeoffs." },
+    { nb: 3, type: "pdf", title: "Behavioral story bank", content: "STAR-format stories: ownership, ambiguity, failure, leadership." },
+  ];
+  const sourceIds: Record<number, string[]> = { 0: [], 1: [], 2: [], 3: [] };
+  for (const s of sources) {
+    const { data } = await supabase.from("resource_sources").insert({
+      org_id: orgId, notebook_id: notebookIds[s.nb], source_type: s.type, title: s.title, content: s.content,
+    }).select("id").single();
+    if (data) sourceIds[s.nb].push(data.id);
+  }
+
+  const chats = [
+    { nb: 0, role: "user", content: "Summarize when to use DP vs greedy." },
+    { nb: 0, role: "assistant", content: "Use DP when the problem has optimal substructure AND overlapping subproblems; greedy works only when a local optimum is globally optimal (matroid structure).", citations: [{ source_id: sourceIds[0][0], snippet: "Bellman's principle of optimality" }] },
+    { nb: 1, role: "user", content: "What are the biggest sources of technical debt in ML systems?" },
+    { nb: 1, role: "assistant", content: "Feedback loops, glue code, configuration debt, and undeclared consumers — per Sculley et al.", citations: [{ source_id: sourceIds[1][0], snippet: "feedback loops, glue code" }] },
+    { nb: 2, role: "user", content: "Summarize the methodology my advisor wants strengthened." },
+    { nb: 2, role: "assistant", content: "Your advisor flagged three gaps: (1) ablate the sparsity coefficient, (2) cite the baseline reconstruction loss from Anthropic's SAE paper, (3) add a scaling curve across model widths.", citations: [{ source_id: sourceIds[2][2], snippet: "Strengthen ablation" }, { source_id: sourceIds[2][0], snippet: "dictionary learning" }] },
+    { nb: 3, role: "user", content: "Give me a STAR story for handling ambiguity." },
+    { nb: 3, role: "assistant", content: "Pull from your thesis pivot story in the bank — frame the unclear advisor goals as the Situation, your scoped 2-week spike as the Task, the SAE prototype as the Action, and the resulting paper draft as the Result.", citations: [{ source_id: sourceIds[3][2], snippet: "STAR-format stories" }] },
+  ];
+  for (const c of chats) {
+    await supabase.from("resource_chats").insert({
+      org_id: orgId, notebook_id: notebookIds[c.nb], user_id: adminUserId,
+      role: c.role, content: c.content, citations: c.citations ?? null,
+    });
+  }
+
+  // Action items as topics (the app surfaces high-priority topics as action items)
+  const actions = [
+    { title: "Finish PSet 4 problem 3", category: "coursework", priority: "high" },
+    { title: "Read Sculley et al. by Friday", category: "coursework", priority: "medium" },
+    { title: "Email advisor with revised methodology", category: "thesis", priority: "high" },
+    { title: "Run SAE ablation on 4 widths", category: "thesis", priority: "high" },
+    { title: "Mock interview — system design", category: "career", priority: "medium" },
+    { title: "Update résumé with thesis results", category: "career", priority: "medium" },
+  ];
+  for (const a of actions) {
+    await supabase.from("topics").insert({
+      org_id: orgId, title: a.title, category: a.category, priority: a.priority,
+      status: "active", owner_name: ctx.memberIds ? "Self" : "Self", source_type: "ai_generated",
+    });
+  }
+
+  // A few notifications so the bell has content
+  await supabase.from("notifications").insert([
+    { org_id: orgId, user_id: adminUserId, title: "Advisor replied to your thesis email", body: "Suggested two more references for the literature review.", type: "info", source_agent: "router" },
+    { org_id: orgId, user_id: adminUserId, title: "Action item due tomorrow", body: "Finish PSet 4 problem 3 by 11:59pm.", type: "warning", source_agent: "critic" },
+  ]);
+}
+
+// ── Persona 2: Northwind Product ─────────────────────────────────────────────
+async function seedNorthwind(ctx: SeedCtx) {
+  const { supabase, orgId, adminUserId, memberIds } = ctx;
+
+  // Projects
+  const projects = [
+    { name: "Checkout v3", description: "Unified checkout across web + mobile.", team_name: "Engineering", progress: 65, status: "active", owner_name: "PM Demo" },
+    { name: "Pricing Refresh", description: "Tiered pricing model + paywall UX.", team_name: "GTM", progress: 40, status: "active", owner_name: "PM Demo" },
+    { name: "Mobile Onboarding", description: "First-run experience for iOS + Android.", team_name: "Design", progress: 80, status: "active", owner_name: "PM Demo" },
+    { name: "Data Platform Migration", description: "Move warehouse to BigQuery.", team_name: "Engineering", progress: 25, status: "active", owner_name: "PM Demo" },
+    { name: "GA4 Rollout", description: "Replace legacy analytics tracking.", team_name: "GTM", progress: 90, status: "active", owner_name: "PM Demo" },
+  ];
+  for (const p of projects) {
+    await supabase.from("projects").insert({ org_id: orgId, ...p });
+  }
+
+  // Decisions (topics)
+  const decisions = [
+    "Adopt Stripe Elements for checkout",
+    "Freeze pricing tiers at 3 plans",
+    "Use Expo for mobile onboarding",
+    "Pick BigQuery over Snowflake",
+    "Migrate to GA4 by July",
+    "Standardize on React Hook Form",
+    "Move email to Resend",
+    "Deprecate legacy admin panel",
+    "Adopt feature flags via PostHog",
+    "Quarterly OKRs locked",
+    "Hire two senior eng for Q3",
+    "Sunset desktop app installer",
+  ];
+  const topicIds: string[] = [];
+  for (const t of decisions) {
+    const { data } = await supabase.from("topics").insert({
+      org_id: orgId, title: t, category: "decision", status: "decided",
+      priority: "medium", source_type: "meeting", owner_name: "PM Demo",
+    }).select("id").single();
+    if (data) topicIds.push(data.id);
+  }
+
+  // Conflicts
+  const conflicts = [
+    { title: "Checkout v3 launch date vs Pricing freeze", description: "Engineering targets July 15 for Checkout v3, but GTM wants pricing finalized before launch — currently slipping to August.", severity: "high", parties: ["Engineering", "GTM"] },
+    { title: "Stripe Elements vs custom form", description: "Two PRs propose conflicting approaches; needs a single owner.", severity: "medium", parties: ["Engineering", "Design"] },
+    { title: "BigQuery vs Snowflake — cost model disagreement", description: "Data team picked BigQuery; Finance flagged 18% overrun risk.", severity: "high", parties: ["Engineering", "Finance"] },
+    { title: "Onboarding copy tone", description: "Design pushing friendly tone; Legal requiring compliance disclaimers.", severity: "low", parties: ["Design", "Legal"] },
+    { title: "GA4 rollout overlapping with checkout launch", description: "Two large rollouts in same week risks attribution chaos.", severity: "medium", parties: ["Engineering", "GTM"] },
+    { title: "Headcount plan vs hiring freeze rumor", description: "Two senior eng reqs open but Finance flagged Q3 freeze.", severity: "high", parties: ["Engineering", "Finance"] },
+  ];
+  for (const c of conflicts) {
+    await supabase.from("conflicts").insert({
+      org_id: orgId, title: c.title, description: c.description, severity: c.severity,
+      status: "open", parties: c.parties, detected_by: "critic",
+      topic_ids: topicIds.slice(0, 2),
+    });
+  }
+
+  // Notifications routed by Router
+  const memberArr = Object.values(memberIds);
+  const recipients = [adminUserId, ...memberArr];
+  const notifs = [
+    "Checkout v3 slipped 2 weeks — Finance should know",
+    "Pricing decision finalized — please update sales decks",
+    "Onboarding copy needs Legal sign-off this week",
+    "BigQuery cost model flagged by Finance",
+    "GA4 rollout collides with Checkout launch window",
+    "New senior eng req posted — Recruiting alerted",
+  ];
+  for (const r of recipients) {
+    for (const n of notifs) {
+      await supabase.from("notifications").insert({
+        org_id: orgId, user_id: r, title: n,
+        body: "Router agent identified you as a stakeholder based on team membership and decision history.",
+        type: "info", source_agent: "router",
+        reasoning: "Stakeholder match score 0.82 — cross-team dependency detected.",
+      });
+    }
+  }
+
+  // A few cross-team messages
+  const channels = ["#eng", "#design", "#gtm", "#leadership"];
+  for (let i = 0; i < 25; i++) {
+    await supabase.from("messages").insert({
+      org_id: orgId, source_type: "slack",
+      sender_name: ["PM Demo", "Eng Lead", "Design Lead", "GTM Lead"][i % 4],
+      channel: channels[i % channels.length],
+      content: `Cross-team update #${i + 1} — sharing context on ${decisions[i % decisions.length]}.`,
+      created_at: daysAgo(30 - i),
+    });
+  }
+}
+
+// ── Persona 3: Lumen Robotics ────────────────────────────────────────────────
+async function seedLumen(ctx: SeedCtx) {
+  const { supabase, orgId, adminUserId } = ctx;
+
+  const projects = [
+    { name: "Atlas-1 Prototype", team_name: "Hardware", progress: 55, status: "active" },
+    { name: "Firmware 4.0", team_name: "Firmware", progress: 70, status: "active" },
+    { name: "Pilot Customer Deployment", team_name: "Ops", progress: 30, status: "active" },
+    { name: "Series B Raise", team_name: "Finance", progress: 50, status: "active" },
+    { name: "FCC Certification", team_name: "Hardware", progress: 20, status: "at_risk" },
+    { name: "Supply Chain Resilience", team_name: "Ops", progress: 60, status: "active" },
+  ];
+  const projectIds: string[] = [];
+  for (const p of projects) {
+    const { data } = await supabase.from("projects").insert({
+      org_id: orgId, owner_name: "Founder Demo", description: p.name + " roadmap", ...p,
+    }).select("id").single();
+    if (data) projectIds.push(data.id);
+  }
+
+  for (const pid of projectIds) {
+    await supabase.from("project_milestones").insert([
+      { project_id: pid, org_id: orgId, name: "Kickoff complete", status: "done", target_date: "2026-04-01" },
+      { project_id: pid, org_id: orgId, name: "Mid-quarter review", status: "in_progress", target_date: "2026-07-15" },
+      { project_id: pid, org_id: orgId, name: "Launch readiness", status: "todo", target_date: "2026-09-30" },
+    ]);
+  }
+
+  const meetings = [
+    { title: "Monday Exec Sync", summary: "Hardware on track for Atlas-1 prototype demo; FCC paperwork at risk.", decisions: ["Hire FCC consultant"], sentiment: "cautious" },
+    { title: "Firmware Review", summary: "v4.0 passing all regression tests; ready for pilot deploy.", decisions: ["Pin v4.0 for pilot"], sentiment: "positive" },
+    { title: "Pilot Customer Standup", summary: "Two customers ready for September install; one slipping to October.", decisions: ["Defer customer C to October"], sentiment: "neutral" },
+    { title: "Series B Pipeline Review", summary: "Three term sheets in flight; lead investor decision by July 30.", decisions: ["Accept lead by July 30"], sentiment: "positive" },
+    { title: "Supply Chain Risk Review", summary: "Lead times for actuators stretching to 12 weeks; alternate vendor qualified.", decisions: ["Dual-source actuators"], sentiment: "cautious" },
+  ];
+  for (let i = 0; i < 20; i++) {
+    const m = meetings[i % meetings.length];
+    await supabase.from("meeting_summaries").insert({
+      org_id: orgId, title: `${m.title} — Week ${i + 1}`, summary: m.summary,
+      key_decisions: m.decisions,
+      action_items: [{ assignee: "Founder Demo", task: "Review and broadcast outcome", due: daysAgo(-7).slice(0, 10) }],
+      sentiment: m.sentiment, created_at: daysAgo(40 - i),
+    });
+  }
+
+  const agentLogs = [
+    { agent_type: "memory", action: "extract_entities", input_summary: "Monday exec sync transcript", output_summary: "Extracted 7 decisions, 3 risks, 12 stakeholders.", reasoning: "Used Gemini 3 Flash with structured Output schema." },
+    { agent_type: "router", action: "score_stakeholders", input_summary: "FCC delay decision", output_summary: "Routed to: Founder, Hardware Lead, Finance Lead.", reasoning: "Pinecone similarity > 0.78 across knowledge graph." },
+    { agent_type: "critic", action: "detect_conflict", input_summary: "Pilot deploy date vs firmware freeze", output_summary: "Conflict detected — pilot deploy is 2 weeks before firmware code freeze.", reasoning: "Critic compared topic versions across two meeting summaries." },
+    { agent_type: "coordinator", action: "generate_daily_brief", input_summary: "Today's signals across all teams", output_summary: "Daily brief generated with 5 sections and 3 risks.", reasoning: "Coordinator orchestrated Memory + Router + Critic and synthesized via Lovable AI Gateway." },
+  ];
+  for (let i = 0; i < 15; i++) {
+    const a = agentLogs[i % agentLogs.length];
+    await supabase.from("agent_logs").insert({
+      org_id: orgId, ...a, duration_ms: 800 + i * 50, created_at: daysAgo(15 - i),
+    });
+  }
+
+  // Daily exec brief surfaced as a top-priority topic
+  await supabase.from("topics").insert({
+    org_id: orgId, title: "Daily Executive Brief",
+    description: "Atlas-1 on track. FCC certification AT RISK — needs founder attention. Series B lead by July 30. Supply chain dual-source complete.",
+    category: "brief", status: "active", priority: "high",
+    source_type: "coordinator_agent", owner_name: "Coordinator",
+  });
+}
+
+// ── Persona registry ─────────────────────────────────────────────────────────
+const PERSONAS: PersonaSpec[] = [
+  {
+    slug: "stanford-cs",
+    name: "Stanford CS Cohort",
+    plan: "free",
+    status: "trialing",
+    admin: { email: "student.demo@chiefofstaff.app", name: "Alex Student", role: "admin", dept: "Academic", title: "Senior CS Student" },
+    members: [
+      { email: "advisor.stanford@chiefofstaff.app", name: "Dr. Riya Patel", role: "manager", dept: "Research", title: "Faculty Advisor" },
+      { email: "labmate.stanford@chiefofstaff.app", name: "Jordan Kim", role: "member", dept: "Research", title: "PhD Student" },
+    ],
+    teams: [
+      { name: "Coursework", color: "#6366f1", description: "Classes, problem sets, exams." },
+      { name: "Research", color: "#8b5cf6", description: "Thesis and lab work." },
+      { name: "Career", color: "#10b981", description: "Internships and interviews." },
+    ],
+    seed: seedStanford,
+  },
+  {
+    slug: "northwind-product",
+    name: "Northwind Product",
+    plan: "pro",
+    status: "active",
+    admin: { email: "pm.demo@chiefofstaff.app", name: "Sam PM", role: "admin", dept: "Product", title: "Group PM" },
+    members: [
+      { email: "eng.northwind@chiefofstaff.app", name: "Priya Engineering", role: "manager", dept: "Engineering", title: "Eng Lead" },
+      { email: "design.northwind@chiefofstaff.app", name: "Diego Design", role: "manager", dept: "Design", title: "Design Lead" },
+      { email: "gtm.northwind@chiefofstaff.app", name: "Marta GTM", role: "manager", dept: "GTM", title: "GTM Lead" },
+    ],
+    teams: [
+      { name: "Engineering", color: "#6366f1", description: "Platform and product engineering." },
+      { name: "Design", color: "#ec4899", description: "Product and brand design." },
+      { name: "GTM", color: "#10b981", description: "Marketing, sales, success." },
+    ],
+    seed: seedNorthwind,
+  },
+  {
+    slug: "lumen-robotics",
+    name: "Lumen Robotics",
+    plan: "enterprise",
+    status: "active",
+    admin: { email: "founder.demo@chiefofstaff.app", name: "Lina Founder", role: "admin", dept: "Executive", title: "CEO & Co-founder" },
+    members: [
+      { email: "hw.lumen@chiefofstaff.app", name: "Hugo Hardware", role: "manager", dept: "Hardware", title: "VP Hardware" },
+      { email: "fw.lumen@chiefofstaff.app", name: "Farah Firmware", role: "manager", dept: "Firmware", title: "VP Firmware" },
+      { email: "ops.lumen@chiefofstaff.app", name: "Owen Ops", role: "manager", dept: "Ops", title: "VP Operations" },
+      { email: "fin.lumen@chiefofstaff.app", name: "Fiona Finance", role: "manager", dept: "Finance", title: "CFO" },
+    ],
+    teams: [
+      { name: "Hardware", color: "#f59e0b", description: "Mechanical and electrical." },
+      { name: "Firmware", color: "#6366f1", description: "Embedded software." },
+      { name: "Ops", color: "#3b82f6", description: "Manufacturing and supply chain." },
+      { name: "Finance", color: "#10b981", description: "Finance and fundraising." },
+    ],
+    seed: seedLumen,
+  },
+];
+
+async function ensureUser(supabase: any, m: Member): Promise<string> {
+  const { data: list } = await supabase.auth.admin.listUsers();
+  const existing = list?.users?.find((u: any) => u.email === m.email);
+  let uid: string;
+  if (existing) {
+    uid = existing.id;
+  } else {
+    const { data: created, error } = await supabase.auth.admin.createUser({
+      email: m.email, password: PASSWORD, email_confirm: true,
+      user_metadata: { full_name: m.name },
+    });
+    if (error) throw new Error(`createUser ${m.email}: ${error.message}`);
+    uid = created.user!.id;
+  }
+  await supabase.from("profiles").upsert(
+    { user_id: uid, display_name: m.name, department: m.dept, job_title: m.title, onboarding_completed: true },
+    { onConflict: "user_id" },
+  );
+  return uid;
+}
+
+async function seedPersona(supabase: any, spec: PersonaSpec) {
+  // Admin user
+  const adminUserId = await ensureUser(supabase, spec.admin);
+
+  // Org (idempotent by slug)
+  const { data: existingOrg } = await supabase
+    .from("organizations").select("id").eq("slug", spec.slug).maybeSingle();
+  let orgId: string;
+  if (existingOrg) {
+    orgId = existingOrg.id;
+  } else {
+    const { data: org, error } = await supabase.from("organizations")
+      .insert({ name: spec.name, slug: spec.slug, created_by: adminUserId })
+      .select("id").single();
+    if (error) throw new Error(`org ${spec.slug}: ${error.message}`);
+    orgId = org.id;
+  }
+
+  // Admin membership
+  await supabase.from("org_memberships").upsert(
+    { org_id: orgId, user_id: adminUserId, role: "admin" },
+    { onConflict: "org_id,user_id" },
+  );
+
+  // Member users
+  const memberIds: Record<string, string> = {};
+  for (const m of spec.members) {
+    const uid = await ensureUser(supabase, m);
+    memberIds[m.email] = uid;
+    await supabase.from("org_memberships").upsert(
+      { org_id: orgId, user_id: uid, role: m.role },
+      { onConflict: "org_id,user_id" },
+    );
+  }
+
+  // Teams
+  for (const t of spec.teams) {
+    const { data: existingTeam } = await supabase.from("teams")
+      .select("id").eq("org_id", orgId).eq("name", t.name).maybeSingle();
+    if (!existingTeam) {
+      await supabase.from("teams").insert({
+        org_id: orgId, name: t.name, color: t.color, description: t.description, created_by: adminUserId,
+      });
+    }
+  }
+
+  // Subscription (upsert to chosen tier)
+  await supabase.from("subscriptions").upsert(
+    {
+      org_id: orgId, plan: spec.plan, status: spec.status,
+      trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+      current_period_start: new Date().toISOString(),
+    },
+    { onConflict: "org_id" },
+  );
+
+  // Rich seed — only if org has no messages or notebooks
+  const { count: msgCount } = await supabase
+    .from("messages").select("id", { count: "exact", head: true }).eq("org_id", orgId);
+  const { count: nbCount } = await supabase
+    .from("resource_notebooks").select("id", { count: "exact", head: true }).eq("org_id", orgId);
+  if ((msgCount ?? 0) === 0 && (nbCount ?? 0) === 0) {
+    await spec.seed({ supabase, orgId, adminUserId, memberIds, daysAgo });
+  }
+
+  return { slug: spec.slug, org_id: orgId, admin_email: spec.admin.email };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const results = [];
+    for (const spec of PERSONAS) {
+      const r = await seedPersona(supabase, spec);
+      results.push(r);
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, password: PASSWORD, personas: results }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  } catch (e: any) {
+    console.error("seed-personas error:", e);
+    return new Response(
+      JSON.stringify({ success: false, error: e?.message ?? String(e) }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+});
