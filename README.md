@@ -14,15 +14,26 @@
 
 **🌐 Live Demo:** [https://org-ai-chief-of-staff.lovable.app](https://org-ai-chief-of-staff.lovable.app)
 
-## Three personas, one product
+## 🔐 Demo accounts (for judges)
 
-| Persona | Org | Login | Plan |
-|---|---|---|---|
-| Overloaded student / IC | Stanford CS Cohort | `student.demo@chiefofstaff.app` | free (trialing) |
-| Cross-team PM | Northwind Product | `pm.demo@chiefofstaff.app` | pro |
-| Founder / leader | Lumen Robotics | `founder.demo@chiefofstaff.app` | enterprise |
+All four logins share the password **`Demo!2026`**. Sign in at
+[`/auth`](https://org-ai-chief-of-staff.lovable.app/auth) — no signup required.
 
-Password for all demo logins: `Demo!2026`. Full submission packet: [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md).
+| Role | Persona | Org | Email | Plan | Where to look |
+|---|---|---|---|---|---|
+| Member / IC | Overloaded student | Stanford CS Cohort | `student.demo@chiefofstaff.app` | free (trialing) | Overview, Notifications, Resources |
+| Manager | Cross-team PM | Northwind Product | `pm.demo@chiefofstaff.app` | pro | Projects, Graph, Oversight, Analytics |
+| Admin | Founder / leader | Lumen Robotics | `founder.demo@chiefofstaff.app` | enterprise | Teams, Agents, Calendar, Conflicts |
+| **Super Admin** | Platform operator | *(cross-org)* | `simonnjenganjuguna@gmail.com` | n/a | `/dashboard/admin` — orgs, subscriptions, audit log, newsletters |
+
+The Super Admin route (`/dashboard/admin`) is guarded by
+[`AdminGuard`](src/components/auth/AdminGuard.tsx) — it checks the
+`user_roles` table for an `admin` row via the `has_role` security-definer
+function and redirects unauthenticated or non-admin users back to
+`/dashboard`. Coverage:
+[`src/components/auth/__tests__/AdminGuard.test.tsx`](src/components/auth/__tests__/AdminGuard.test.tsx).
+
+Full submission packet: [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md).
 
 ### 🚦 Submission status (June 14–21, 2026)
 
@@ -323,6 +334,28 @@ docs/                    # Architecture, agents, API, database, submission docs
 | [Deployment](./docs/DEPLOYMENT.md) | Deployment guide |
 | [Roadmap](./docs/ROADMAP.md) | Future development plans |
 | [Submission](./docs/SUBMISSION.md) | Hackathon submission details |
+| [HeyGen Video Plan](./docs/HEYGEN-VIDEO-PLAN.md) | Scripts, avatars, and pipeline for the 2 submission videos |
+
+---
+
+## 📦 Submission package (USAII Global AI Hackathon 2026)
+
+This repo is the canonical artifact for **College Brief 3 — Productivity / Second Brain**. Judges should find every required item below in one click:
+
+| # | Required artifact | Location |
+|---|---|---|
+| 1 | Short description (150–300 words) | [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md) §"Short Description" |
+| 2 | Live project URL | https://org-ai-chief-of-staff.lovable.app |
+| 3 | Public GitHub repo | This repository |
+| 4 | 1-page report (PDF) | [`docs/1-page-report.html`](docs/1-page-report.html) → print-to-PDF |
+| 5 | Demo video (≤60s) | See [`docs/HEYGEN-VIDEO-PLAN.md`](docs/HEYGEN-VIDEO-PLAN.md) — Demo track |
+| 6 | Tech video (≤60s) | See [`docs/HEYGEN-VIDEO-PLAN.md`](docs/HEYGEN-VIDEO-PLAN.md) — Tech track |
+| 7 | Demo accounts | See **🔐 Demo accounts** section above |
+| 8 | Screenshots (12 routes × 3 personas) | [`docs/demo-screenshots/`](docs/demo-screenshots/) |
+| 9 | Zipped code | `git archive --format=zip --output=superhuman-cos.zip HEAD` |
+| 10 | Dataset | N/A — uses live data + `seed-personas` edge function |
+
+**Judging rubric coverage:** Technical Depth (multi-agent system, Neo4j + Pinecone, RLS, Edge Functions) · Creativity & Innovation (proactive Critic agent, 3D knowledge graph) · Communication (this README, the 1-page report, two 60-second videos).
 
 ---
 
