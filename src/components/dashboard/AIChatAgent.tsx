@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  trace?: Array<{ agent: string; action: string; output: string }>;
 }
 
 const STORAGE_KEY = "ai-cos-chat-enabled";
@@ -76,7 +77,7 @@ export function AIChatAgent() {
       });
       if (error) throw error;
       const assistantContent = data?.choices?.[0]?.message?.content || "I couldn't process that. Please try again.";
-      setMessages(prev => [...prev, { role: "assistant", content: assistantContent }]);
+      setMessages(prev => [...prev, { role: "assistant", content: assistantContent, trace: data?.trace ?? [] }]);
     } catch (err: any) {
       console.error("AI chat error:", err);
       setMessages(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
