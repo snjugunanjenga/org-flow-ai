@@ -45,6 +45,26 @@ export async function requireUser(req: Request, opts: { requireOrg?: boolean } =
     if (m) orgId = m.org_id as string;
   }
 
+  // Super-admins are not members of any single org — fall back to the first
+  // organization so platform-admin tooling can call org-scoped endpoints.
+  if (!orgId) {
+    const { data: isAdmin } = await service
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (isAdmin) {
+      const { data: anyOrg } = await service
+        .from("organizations")
+        .select("id")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (anyOrg) orgId = anyOrg.id as string;
+    }
+  }
+
   if (opts.requireOrg && !orgId) {
     throw new Response(JSON.stringify({ error: "No organization for user" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
