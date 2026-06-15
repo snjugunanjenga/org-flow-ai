@@ -65,6 +65,23 @@ export async function requireUser(req: Request, opts: { requireOrg?: boolean } =
     }
   }
 
+  // No org yet — auto-provision a personal workspace so AI/agent endpoints
+  // work for any signed-in user (e.g. new sign-ups who skipped onboarding).
+  if (!orgId && opts.requireOrg) {
+    const email = (data.claims.email as string | undefined) ?? "user";
+    const slugBase = email.split("@")[0].replace(/[^a-z0-9]/gi, "-").toLowerCase() || "workspace";
+    const slug = `${slugBase}-${userId.slice(0, 8)}`;
+    const { data: newOrg } = await service
+      .from("organizations")
+      .insert({ name: `${email}'s Workspace`, slug, plan: "free" })
+      .select("id")
+      .single();
+    if (newOrg) {
+      await service.from("org_memberships").insert({ org_id: newOrg.id, user_id: userId, role: "admin" });
+      orgId = newOrg.id as string;
+    }
+  }
+
   if (opts.requireOrg && !orgId) {
     throw new Response(JSON.stringify({ error: "No organization for user" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
