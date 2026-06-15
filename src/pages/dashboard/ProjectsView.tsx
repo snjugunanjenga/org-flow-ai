@@ -301,6 +301,18 @@ export default function ProjectsView() {
             </div>
           </div>
           <div className="glass-panel p-6">
+            <h3 className="text-lg font-semibold font-display mb-3">Milestones ({selectedMilestones.length})</h3>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Coordinator-proposed milestones. Accept to commit, Skip to dismiss — both are logged for the Critic.
+            </p>
+            <div className="space-y-2 mb-6">
+              {selectedMilestones.length === 0 && (
+                <p className="text-xs text-muted-foreground">No milestones yet for this project.</p>
+              )}
+              {selectedMilestones.map((m: any) => (
+                <PlanMilestoneRow key={m.id} milestone={m} onChange={loadData} />
+              ))}
+            </div>
             <h3 className="text-lg font-semibold font-display mb-4">AI Updates</h3>
             <div className="space-y-4">
               {selectedUpdates.map(u => (
