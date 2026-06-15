@@ -26,7 +26,7 @@ fi
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 HEADED="${HEADED:-1}"
 
-echo "▶ [1/2] Reseeding personas (Stanford / Northwind / Lumen)…"
+echo "▶ [1/3] Reseeding personas (Apple / Stanford / Northwind / Lumen)…"
 curl -fsS -X POST \
   "${VITE_SUPABASE_URL}/functions/v1/seed-personas" \
   -H "Authorization: Bearer ${VITE_SUPABASE_PUBLISHABLE_KEY}" \
@@ -36,8 +36,11 @@ curl -fsS -X POST \
   | tee /tmp/seed-personas.log
 echo
 
-echo "▶ [2/2] Capturing walkthrough screenshots (HEADED=${HEADED}, BASE_URL=${BASE_URL})…"
+echo "▶ [2/3] Capturing walkthrough screenshots (HEADED=${HEADED}, BASE_URL=${BASE_URL})…"
 HEADED="${HEADED}" BASE_URL="${BASE_URL}" \
   python3 docs/demo-screenshots/walkthrough.py
 
-echo "✓ Done. Screenshots in docs/demo-screenshots/{student,pm,founder}/"
+echo "▶ [3/3] Verifying voice notification + Talk to Coordinator UI per persona…"
+python3 docs/demo-screenshots/voice-walkthrough.py || echo "(voice walkthrough reported failures — see logs)"
+
+echo "✓ Done. Screenshots in docs/demo-screenshots/{apple,student,pm,founder,voice}/"

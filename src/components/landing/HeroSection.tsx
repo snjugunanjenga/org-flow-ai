@@ -49,7 +49,7 @@ export function HeroSection() {
             <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3 flex items-center justify-center gap-2">
               <Sparkles className="h-3 w-3" /> Try a demo organization
             </p>
-            <div id="personas" className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div id="personas" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {DEMO_PERSONAS.map((p) => (
                 <Button
                   key={p.slug}
