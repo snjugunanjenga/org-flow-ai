@@ -660,6 +660,8 @@ async function seedPersona(supabase: any, spec: PersonaSpec) {
     // Layer on daily voice briefings + DMs for every persona
     await seedDailyVoiceAndMessages({ supabase, orgId, adminUserId, memberIds, daysAgo }, spec.name);
   }
+  // Graph edges are idempotent-checked inside the helper; safe to always call
+  await seedGraphEdges({ supabase, orgId, adminUserId, memberIds, daysAgo }, spec.name);
 
   return { slug: spec.slug, org_id: orgId, admin_email: spec.admin.email };
 }
