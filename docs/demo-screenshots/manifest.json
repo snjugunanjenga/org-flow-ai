@@ -1,0 +1,200 @@
+[
+  {
+    "persona": "Stanford CS Cohort",
+    "email": "student.demo@chiefofstaff.app",
+    "shots": [
+      {
+        "name": "01-overview",
+        "route": "/dashboard",
+        "file": "student/01-overview.png"
+      },
+      {
+        "name": "02-projects",
+        "route": "/dashboard/projects",
+        "file": "student/02-projects.png"
+      },
+      {
+        "name": "03-graph",
+        "route": "/dashboard/graph",
+        "file": "student/03-graph.png"
+      },
+      {
+        "name": "04-agents",
+        "route": "/dashboard/agents",
+        "file": "student/04-agents.png"
+      },
+      {
+        "name": "05-topics",
+        "route": "/dashboard/topics",
+        "file": "student/05-topics.png"
+      },
+      {
+        "name": "06-teams",
+        "route": "/dashboard/teams",
+        "file": "student/06-teams.png"
+      },
+      {
+        "name": "07-resources",
+        "route": "/dashboard/resources",
+        "file": "student/07-resources.png"
+      },
+      {
+        "name": "08-calendar",
+        "route": "/dashboard/calendar",
+        "file": "student/08-calendar.png"
+      },
+      {
+        "name": "09-messages",
+        "route": "/dashboard/messages",
+        "file": "student/09-messages.png"
+      },
+      {
+        "name": "10-notifications",
+        "route": "/dashboard/notifications",
+        "file": "student/10-notifications.png"
+      },
+      {
+        "name": "11-analytics",
+        "route": "/dashboard/analytics",
+        "file": "student/11-analytics.png"
+      },
+      {
+        "name": "12-settings",
+        "route": "/dashboard/settings",
+        "file": "student/12-settings.png"
+      }
+    ]
+  },
+  {
+    "persona": "Northwind Product",
+    "email": "pm.demo@chiefofstaff.app",
+    "shots": [
+      {
+        "name": "01-overview",
+        "route": "/dashboard",
+        "file": "pm/01-overview.png"
+      },
+      {
+        "name": "02-projects",
+        "route": "/dashboard/projects",
+        "file": "pm/02-projects.png"
+      },
+      {
+        "name": "03-graph",
+        "route": "/dashboard/graph",
+        "file": "pm/03-graph.png"
+      },
+      {
+        "name": "04-agents",
+        "route": "/dashboard/agents",
+        "file": "pm/04-agents.png"
+      },
+      {
+        "name": "05-topics",
+        "route": "/dashboard/topics",
+        "file": "pm/05-topics.png"
+      },
+      {
+        "name": "06-teams",
+        "route": "/dashboard/teams",
+        "file": "pm/06-teams.png"
+      },
+      {
+        "name": "07-resources",
+        "route": "/dashboard/resources",
+        "file": "pm/07-resources.png"
+      },
+      {
+        "name": "08-calendar",
+        "route": "/dashboard/calendar",
+        "file": "pm/08-calendar.png"
+      },
+      {
+        "name": "09-messages",
+        "route": "/dashboard/messages",
+        "file": "pm/09-messages.png"
+      },
+      {
+        "name": "10-notifications",
+        "route": "/dashboard/notifications",
+        "file": "pm/10-notifications.png"
+      },
+      {
+        "name": "11-analytics",
+        "route": "/dashboard/analytics",
+        "file": "pm/11-analytics.png"
+      },
+      {
+        "name": "12-settings",
+        "route": "/dashboard/settings",
+        "file": "pm/12-settings.png"
+      }
+    ]
+  },
+  {
+    "persona": "Lumen Robotics",
+    "email": "founder.demo@chiefofstaff.app",
+    "shots": [
+      {
+        "name": "01-overview",
+        "route": "/dashboard",
+        "file": "founder/01-overview.png"
+      },
+      {
+        "name": "02-projects",
+        "route": "/dashboard/projects",
+        "file": "founder/02-projects.png"
+      },
+      {
+        "name": "03-graph",
+        "route": "/dashboard/graph",
+        "file": "founder/03-graph.png"
+      },
+      {
+        "name": "04-agents",
+        "route": "/dashboard/agents",
+        "file": "founder/04-agents.png"
+      },
+      {
+        "name": "05-topics",
+        "route": "/dashboard/topics",
+        "file": "founder/05-topics.png"
+      },
+      {
+        "name": "06-teams",
+        "route": "/dashboard/teams",
+        "file": "founder/06-teams.png"
+      },
+      {
+        "name": "07-resources",
+        "route": "/dashboard/resources",
+        "file": "founder/07-resources.png"
+      },
+      {
+        "name": "08-calendar",
+        "route": "/dashboard/calendar",
+        "file": "founder/08-calendar.png"
+      },
+      {
+        "name": "09-messages",
+        "route": "/dashboard/messages",
+        "file": "founder/09-messages.png"
+      },
+      {
+        "name": "10-notifications",
+        "route": "/dashboard/notifications",
+        "file": "founder/10-notifications.png"
+      },
+      {
+        "name": "11-analytics",
+        "route": "/dashboard/analytics",
+        "file": "founder/11-analytics.png"
+      },
+      {
+        "name": "12-settings",
+        "route": "/dashboard/settings",
+        "file": "founder/12-settings.png"
+      }
+    ]
+  }
+]
