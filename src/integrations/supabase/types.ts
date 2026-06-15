@@ -277,6 +277,56 @@ export type Database = {
           },
         ]
       }
+      connector_subscriptions: {
+        Row: {
+          connector: string
+          created_at: string
+          created_by: string | null
+          cursor: string | null
+          enabled: boolean
+          external_id: string | null
+          id: string
+          label: string | null
+          last_synced_at: string | null
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          connector: string
+          created_at?: string
+          created_by?: string | null
+          cursor?: string | null
+          enabled?: boolean
+          external_id?: string | null
+          id?: string
+          label?: string | null
+          last_synced_at?: string | null
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          connector?: string
+          created_at?: string
+          created_by?: string | null
+          cursor?: string | null
+          enabled?: boolean
+          external_id?: string | null
+          id?: string
+          label?: string | null
+          last_synced_at?: string | null
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connector_subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       direct_messages: {
         Row: {
           content: string
@@ -445,6 +495,32 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "graph_edges_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingest_dedupe: {
+        Row: {
+          ingested_at: string
+          org_id: string
+          source_hash: string
+        }
+        Insert: {
+          ingested_at?: string
+          org_id: string
+          source_hash: string
+        }
+        Update: {
+          ingested_at?: string
+          org_id?: string
+          source_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingest_dedupe_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"

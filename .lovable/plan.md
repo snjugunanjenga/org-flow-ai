@@ -1,144 +1,170 @@
 
-# USAII Global AI Hackathon 2026 — Submission Plan
+# Phase 2 (Intelligence) + Phase 3 (Connectors) + Tests
 
-## Status
+Goal: ship a real multi-agent loop wired through the AI SDK, plus Slack/Gmail Connector Gateway ingestion, plus a complete test layer (Vitest + Deno + Playwright) ready for HeyGen capture.
 
-- [x] **Step 1** — `120x-architect-sub-agent` skill applied (`.workspace/skills/120x-architect-sub-agent/`).
-- [x] **Step 2 (partial)** — README hero reframed for Brief 3 with three-persona table.
-- [x] **Step 3** — `seed-personas` edge function deployed; three demo orgs live:
-  - Stanford CS Cohort (`student.demo@chiefofstaff.app`)
-  - Northwind Product (`pm.demo@chiefofstaff.app`)
-  - Lumen Robotics (`founder.demo@chiefofstaff.app`)
-  - Password: `Demo!2026`
-- [x] **Step 10 (partial)** — `docs/SUBMISSION-USAII.md` drafted with persona logins + Responsible-AI section.
-- [ ] **Step 2 (remaining)** — landing page hero, PersonaCards, footer copy refresh.
-- [ ] **Step 4** — Phase 2 intelligence wiring (Memory→Router→Critic→Coordinator live via AI SDK + Lovable AI Gateway).
-- [ ] **Step 5** — Phase 3 connectors (Slack + Gmail via Lovable Connector Gateway).
-- [ ] **Step 6** — Phase 4 voice + project status AI.
-- [ ] **Step 7** — Phase 5 tests + CI + Demo Mode toggle + mobile sweep.
-- [ ] **Step 8** — Playwright screenshot suite (24 shots, 3 orgs) → `docs/demo-screenshots/`.
-- [ ] **Step 9** — HeyGen demo + tech video production.
-- [ ] **Step 11** — final Devpost checklist + GitHub push.
+## 1. Shared edge helpers
 
-Target: **College Core Challenge — Brief 3: Productivity / "Second Brain" for Real Life**
-Window: June 14–21, 2026. Rubric: Technical Depth 33% · Creativity & Innovation 33% · Communication 33%.
+Create `supabase/functions/_shared/` (new):
+- `ai-gateway.ts` — `createLovableAiGatewayProvider`, `getLovableAiGatewayResponseHeaders`, `withLovableAiGatewayRunIdHeader` (verbatim from skill).
+- `auth.ts` — `requireUser(req)` returns `{ supabase, user, orgId }`; resolves active `org_id` via `org_memberships`.
+- `embeddings.ts` — `embed(text)` via Lovable AI Gateway `text-embedding-3-small` proxy.
+- `log-agent.ts` — `logAgent({orgId, userId, agent, input, reasoning, output, latency_ms})` insert into `agent_logs`.
 
-Existing AI Chief of Staff product is reframed for Brief 3 ("turn complexity into clear next steps"), unfinished roadmap phases are shipped, three persona-driven demo orgs are seeded and screenshotted via Playwright, and HeyGen-ready submission assets are produced.
+## 2. Phase 2 — real multi-agent AI SDK loop
 
----
-
-## 1. Reframe Product for USAII Brief 3
-
-- Landing hero + PersonaCards + Pricing + Footer copy → "Your second brain for life, learning & work."
-- Three persona narratives surfaced on the landing page, each linking to a demo org login.
-- README + docs intro reframed; old Hack-Nation submission preserved as `docs/SUBMISSION-HACKNATION.md`.
-
-## 2. `120x-architect-sub-agent` as a Lovable Skill
-
-Draft under `.agents/skills/120x-architect-sub-agent/`, then apply via `skills--apply_draft`. Build-time only; no runtime code.
-
-- `SKILL.md` — triggers on "plan docs", "architecture review", "hackathon submission", "120x architect". Workflow: Discover → Define → Design → Deliver → Demo.
-- `references/usaii-rubric.md` — judging weights + heuristics.
-- `references/doc-templates.md` — README/ARCHITECTURE/ROADMAP/SUBMISSION skeletons.
-- `references/demo-script.md` — 60-sec demo + 60-sec tech video shot lists.
-- `references/persona-playbook.md` — the three personas, their flows, and screenshot checklist.
-
-## 3. Three Demo Organizations (additive — keep Apple/Steve Jobs demo intact)
-
-Seeded via a new edge function `supabase/functions/seed-personas/index.ts` (idempotent, callable from Platform Admin "Seed personas" button). Medium depth: 15–25 items per surface per org.
-
-| Persona | Org | Admin login | Color | Focus |
-|---|---|---|---|---|
-| Overloaded student / IC | **Stanford CS Cohort** | `student.demo@chiefofstaff.app` / `Demo!2026` | indigo | Capture sources → grounded answers → action items |
-| Cross-team PM | **Northwind Product** | `pm.demo@chiefofstaff.app` / `Demo!2026` | emerald | Decisions, conflicts, "who needs to know" routing |
-| Founder / leader | **Lumen Robotics** | `founder.demo@chiefofstaff.app` / `Demo!2026` | amber | Daily executive brief synthesized from all signals |
-
-Per-org seed contents:
-- Stanford CS Cohort: 4 notebooks (Algorithms, ML Systems, Thesis, Interview Prep), ~20 sources (PDFs/URLs), 18 grounded chats with citations, 12 AI-generated action items, 3 teams (Coursework / Research / Career).
-- Northwind Product: 3 cross-functional teams (Eng / Design / GTM), 5 projects, 22 decisions in `topics`, 6 conflicts in `conflicts`, 18 routed notifications, 25 messages spanning teams.
-- Lumen Robotics: 4 teams (Hardware / Firmware / Ops / Finance), 6 projects with milestones, 20 meeting summaries, 15 agent_logs across all four agents, daily executive brief generated by Coordinator.
-
-Subscriptions: Stanford → free (trialing), Northwind → pro, Lumen → enterprise — also showcases plan tiers.
-
-## 4. Ship Remaining Roadmap Phases
-
-### Phase 2 — Intelligence layer (live)
-Wire `neo4j-proxy` + `pinecone-proxy` end-to-end. `ai-agent` runs a real Memory→Router→Critic→Coordinator loop with AI SDK + Lovable AI Gateway (`google/gemini-3-flash-preview`, `stepCountIs(50)`). Reasoning traces surfaced in `AIChatAgent` + `AgentsView` from `agent_logs`.
-
-### Phase 3 — Real connectors
-Slack, Gmail, Google Calendar via `standard_connectors--connect`, routed through Lovable Connector Gateway in edge functions. Minimum demo path per connector: 1 signal in → Memory extracts → appears in graph + notifications.
-
-### Phase 4 — Voice + project status AI
-OpenAI Realtime push-to-talk in `AIChatAgent`. ProjectsView weekly status auto-generated from `project_updates` + `meeting_summaries`.
-
-### Phase 5 — Quality + demo polish
-Vitest expansion (Resources, Admin, Onboarding). Playwright E2E smoke. GitHub Actions CI (lint + vitest). "Demo Mode" toggle that calls `seed-personas` and routes to a scripted tour. Mobile responsive sweep.
-
-## 5. Playwright Screenshot Suite (drives HeyGen video)
-
-Scripts under `/tmp/browser/personas/` (per browser-main-agent rules), final images committed to `docs/demo-screenshots/`.
-
-For each of the 3 demo orgs:
-1. **Login + dashboard overview** — sidebar, KPIs, recent activity.
-2. **Full persona walkthrough**
-   - Student: open notebook → upload PDF → ask grounded question → see citations → action items panel.
-   - PM: open Graph view → click conflict node → Critic reasoning → Router "who needs to know" list → notifications.
-   - Founder: Overview → Coordinator daily brief → Analytics → cross-team risks.
-3. **Reasoning panels + agent traces** — Memory / Router / Critic / Coordinator thinking UI captured mid-stream.
-
-Total: ~24 screenshots (8 per org). Stored at 1280×1800. Manifest written to `docs/demo-screenshots/manifest.json` for the HeyGen editor.
-
-## 6. HeyGen Demo Videos
-
-Two 60-second videos using the captured screenshots + screen recording of the live preview:
-- **Demo video** — three persona stories woven together, narrated by HeyGen avatar.
-- **Tech video** — architecture, multi-agent loop, RLS, connectors, knowledge graph.
-
-Scripts live in the 120x skill (`references/demo-script.md`) and final video URLs go into `docs/SUBMISSION.md`.
-
-## 7. Submission Artifacts (USAII format)
-
-Rewrite `docs/SUBMISSION.md` and regenerate `docs/1-page-report.html` for USAII:
-- Project title, Brief 3 track, undergraduate eligibility statement.
-- 150–300 word short description (Second Brain framing).
-- Structured sections: Problem · Audience · Solution · USP · Implementation · Impact.
-- Tech stack table + architecture diagram (ASCII + PNG).
-- Demo + Tech video links (HeyGen).
-- Three persona demo logins (above).
-- GitHub repo URL, live URL, zip instructions.
-- **Responsible-AI statement** — data sources, RLS isolation, citation-first chat, no PII exfiltration (USAII weighs responsible AI).
-- Devpost submission checklist.
-
-Also refresh `README.md`, `docs/ROADMAP.md`, `docs/RISKS.md`, `.lovable/plan.md`.
-
-## 8. Implementation Order
+Rewrite `supabase/functions/ai-agent/index.ts` as a Coordinator driver using `streamText` + tools (`stopWhen: stepCountIs(50)`).
 
 ```text
-1. Apply 120x-architect-sub-agent skill
-2. Reframe landing + copy (Brief 3 narrative)
-3. seed-personas edge function + 3 demo orgs + logins
-4. Phase 2 intelligence wiring (agents + Neo4j + Pinecone live)
-5. Phase 3 connectors (Slack, Gmail; Calendar polish)
-6. Phase 4 voice + project status AI
-7. Phase 5 tests, CI, demo mode, mobile sweep
-8. Playwright screenshot suite (24 shots, 3 orgs)
-9. HeyGen demo + tech videos
-10. Rewrite SUBMISSION.md + 1-page-report.html for USAII
-11. Final checklist + push to GitHub
+Coordinator (streamText)
+├─ tool: search_memory  (Pinecone query, namespace=org_id) → snippets+citations
+├─ tool: graph_lookup   (neo4j-proxy MATCH with WHERE n.org_id=$org)
+├─ tool: invoke_memory  (extract entities → embed → upsert Pinecone + Neo4j + Postgres)
+├─ tool: invoke_router  (score stakeholders, write notifications)
+└─ tool: invoke_critic  (detect conflicts → insert conflicts rows)
 ```
 
-## 9. Technical Notes
+- Every tool `execute()` writes to `agent_logs` (color = agent identity).
+- Each `execute()` returns compact JSON (≤2 KB) so the model can cite.
+- Citations enforced in system prompt: "no source ⇒ no answer".
+- Stream response via `result.toUIMessageStreamResponse({ headers: corsHeaders })`, wrapped in `withLovableAiGatewayRunIdHeader`.
+- Model: `google/gemini-3-flash-preview`. JWT verified in code via `getClaims`.
 
-- AI: AI SDK + Lovable AI Gateway via existing `_shared/ai-gateway.ts`. Agent loops use `stopWhen: stepCountIs(50)`.
-- Connectors: prefer `standard_connectors--connect`; Calendar stays custom OAuth.
-- DB: no schema changes needed — existing 31 tables cover seeds. Any new tables follow GRANT + RLS pattern.
-- Secrets: NEO4J_*, PINECONE_*, LOVABLE_API_KEY already set. Slack/Gmail come from connector linking.
-- Tests: Vitest units + Playwright via shell for E2E and screenshots.
+New edge function `supabase/functions/agent-ingest/index.ts`:
+- Used by connectors + Resources upload. Runs Memory tool standalone on raw text, then triggers Router + Critic. Idempotent on `(org_id, source_hash)`.
 
-## 10. Out of Scope
+Update `src/components/dashboard/AIChatAgent.tsx` to use `@ai-sdk/react` `useChat` + `DefaultChatTransport` pointing at `/functions/v1/ai-agent`. Render `message.parts` with `react-markdown`. Show tool-call activity (Memory/Router/Critic labels with color) inline.
 
-- Pivot to Brief 4 (Public Services).
+Update `src/pages/dashboard/AgentsView.tsx` to subscribe to `agent_logs` realtime for the active org and render a color-coded reasoning stream.
+
+## 3. Phase 3 — Slack + Gmail via Connector Gateway
+
+Trigger `standard_connectors--connect` for `slack` and `google_mail` in build mode (user picks workspace connections).
+
+New edge functions:
+- `connector-slack-ingest/index.ts` — polls `conversations.history` for configured channels (saved in new `connector_subscriptions` table), normalizes messages, calls `agent-ingest`.
+- `connector-gmail-ingest/index.ts` — `users.me.messages?q=is:unread newer_than:1d`, normalizes thread → `agent-ingest`.
+- `connector-dispatch/index.ts` — Router-driven outbound: `chat.postMessage` (Slack) or `messages/send` (Gmail) when Router decides a notification needs external delivery.
+
+Pattern (per connector):
+```ts
+const url = `https://connector-gateway.lovable.dev/${id}/${path}`;
+const res = await fetch(url, { headers: {
+  Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+  "X-Connection-Api-Key": Deno.env.get(`${ID}_API_KEY`)!,
+}});
+```
+
+New migration `connector_subscriptions` (org_id, connector, external_id, cursor, last_synced_at, enabled) with full GRANT + RLS (manager-or-admin write, member read).
+
+UI: `src/pages/dashboard/SettingsView.tsx` gains a "Connectors" panel listing Slack/Gmail/Calendar status, channel/label pickers, and a "Run sync now" button (invokes the ingest function). Each demo persona gets a Demo Mode banner explaining the connector path.
+
+Calendar stays on existing custom OAuth (`calendar-sync`); only polish: list active subscriptions and surface upcoming events in Overview.
+
+## 4. Tests
+
+### 4.1 Vitest (frontend)
+New `*.test.tsx` files (jsdom):
+- `AIChatAgent.test.tsx` — renders, sends user message, mocks `useChat`, asserts tool-call chips display.
+- `AgentsView.test.tsx` — renders agent_logs stream, color-codes by agent.
+- `SettingsView.connectors.test.tsx` — toggles a subscription, asserts invoke called.
+- `ProjectsView.test.tsx`, `NotificationsView.test.tsx`, `GraphView.test.tsx` — smoke + RLS-scoped query mocks.
+- `useSubscription.test.ts` — plan gating returns correct booleans.
+- Add MSW handlers under `src/test/msw.ts` for Supabase + edge functions.
+
+### 4.2 Deno edge tests
+Add `*_test.ts` next to each function (loaded via `dotenv/load.ts`, `Deno.test`, fetch + `await res.text()`):
+- `ai-agent/index_test.ts` — 401 without auth; happy path with mocked gateway via `Deno.env` injection of `LOVABLE_API_KEY=test` and a fetch stub via `globalThis.fetch` wrap; asserts `agent_logs` row created.
+- `neo4j-proxy/index_test.ts` — 400 on missing query; 401 on no auth.
+- `pinecone-proxy/index_test.ts` — invalid action 400; namespace passthrough.
+- `agent-ingest/index_test.ts` — idempotency on duplicate source_hash.
+- `connector-slack-ingest/index_test.ts` + `connector-gmail-ingest/index_test.ts` — gateway URL/headers shape; 401 surfaces; cursor advances.
+- `seed-personas/index_test.ts` — second invocation does not duplicate rows.
+
+Run via `supabase--test_edge_functions` with `--allow-net --allow-env` (default).
+
+### 4.3 Playwright persona walkthroughs
+Scripts under `/tmp/browser/personas/` (one per persona), reusing the `LOVABLE_BROWSER_SUPABASE_*` env seeding pattern with the three demo logins (Stanford, Northwind, Lumen).
+
+Per persona, 8 screenshots → `docs/demo-screenshots/<persona>/NN_*.png`:
+1. Login + dashboard overview
+2. Persona-specific surface (notebook / graph / brief)
+3. Open AI chat, ask a question, capture streaming + tool-call chips
+4. Reasoning trace in AgentsView
+5. Connector settings (Slack/Gmail status)
+6. Notifications routed by Router
+7. Conflicts (Critic) or daily brief (Coordinator)
+8. Subscription tier indicator
+
+`docs/demo-screenshots/manifest.json` lists all 24 with captions for HeyGen.
+
+### 4.4 CI
+`.github/workflows/ci.yml`:
+```yaml
+on: [push, pull_request]
+jobs:
+  test:
+    steps:
+      - bun install
+      - bun run lint
+      - bunx vitest run
+```
+Deno + Playwright jobs documented but not enforced (need secrets).
+
+## 5. Files (high-level)
+
+```text
+supabase/functions/
+  _shared/{ai-gateway,auth,embeddings,log-agent}.ts        (new)
+  ai-agent/index.ts                                         (rewrite — AI SDK tool loop)
+  ai-agent/index_test.ts                                    (new)
+  agent-ingest/index.ts + index_test.ts                     (new)
+  connector-slack-ingest/index.ts + _test.ts                (new)
+  connector-gmail-ingest/index.ts + _test.ts                (new)
+  connector-dispatch/index.ts                               (new)
+  neo4j-proxy/index_test.ts                                 (new)
+  pinecone-proxy/index_test.ts                              (new)
+  seed-personas/index_test.ts                               (new)
+
+src/
+  components/dashboard/AIChatAgent.tsx                      (rewrite to useChat + parts)
+  components/dashboard/ConnectorsPanel.tsx                  (new)
+  pages/dashboard/AgentsView.tsx                            (realtime agent_logs)
+  pages/dashboard/SettingsView.tsx                          (mount ConnectorsPanel)
+  hooks/use-agent-logs.ts                                   (new realtime hook)
+  test/msw.ts                                               (new)
+  **/__tests__/*.test.tsx                                   (six new files)
+
+supabase/migrations/<ts>_connector_subscriptions.sql        (new)
+.github/workflows/ci.yml                                    (new)
+docs/demo-screenshots/manifest.json                         (new, populated after Playwright)
+```
+
+## 6. Secrets / connectors required
+
+- `LOVABLE_API_KEY` ✅
+- `PINECONE_*`, `NEO4J_*` ✅
+- Slack connection via `standard_connectors--connect slack` → `SLACK_API_KEY`
+- Gmail connection via `standard_connectors--connect google_mail` → `GOOGLE_MAIL_API_KEY`
+
+If a connection cannot be linked at run time, ingest functions fall through to a "synthetic signal" mode using seed-personas content so the demo path never breaks.
+
+## 7. Implementation order
+
+1. `_shared/*` helpers + `connector_subscriptions` migration.
+2. Rewrite `ai-agent` with AI SDK tool loop → `supabase--test_edge_functions ai-agent`.
+3. `agent-ingest` + Deno test.
+4. Slack/Gmail connector linking + ingest functions + dispatch + Deno tests.
+5. Frontend: `useChat` chat agent, `AgentsView` realtime, `ConnectorsPanel`.
+6. Vitest suites + MSW.
+7. Deno tests across functions.
+8. Playwright persona walkthroughs → 24 screenshots + manifest.
+9. CI workflow.
+10. Re-run all tests, fix regressions, update `docs/ARCHITECTURE.md` status table and `.lovable/plan.md` to mark Phase 2/3/5 done.
+
+## 8. Out of scope (kept for later phases)
+
+- Phase 4 voice (OpenAI Realtime) — pending.
+- HeyGen video render — pending (screenshots produced here are the inputs).
 - Stripe/Paddle billing.
-- Native mobile apps.
-- Custom model fine-tuning.
-- Removing or altering the existing Apple/Steve Jobs demo org.
+- Removing Apple/Steve Jobs demo org.
