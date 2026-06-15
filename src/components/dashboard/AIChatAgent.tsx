@@ -9,9 +9,31 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   trace?: Array<{ agent: string; action: string; output: string }>;
+  confidence?: { level: "high" | "med" | "low"; score: number; reason: string };
 }
 
 const STORAGE_KEY = "ai-cos-chat-enabled";
+
+function deriveConfidence(trace: Array<{ agent: string; action: string; output: string }> | undefined) {
+  if (!trace || trace.length === 0) {
+    return { level: "low" as const, score: 0.5, reason: "No retrieval signals — answered from general knowledge." };
+  }
+  const agents = new Set(trace.map(t => t.agent));
+  const memoryHits = trace.filter(t => t.agent === "memory").length;
+  const criticHits = trace.filter(t => t.agent === "critic").length;
+  // Score: 0.5 base + 0.1 per memory retrieval (cap 0.3) + 0.1 per other agent (cap 0.2)
+  let score = 0.5 + Math.min(memoryHits * 0.1, 0.3) + Math.min((agents.size - (memoryHits > 0 ? 1 : 0)) * 0.07, 0.2);
+  if (criticHits > 0) score = Math.min(score + 0.05, 0.95);
+  score = Math.min(Math.max(score, 0), 1);
+  const level: "high" | "med" | "low" = score >= 0.82 ? "high" : score >= 0.65 ? "med" : "low";
+  const reason =
+    level === "high"
+      ? `Grounded in ${memoryHits} memory retrievals across ${agents.size} agents.`
+      : level === "med"
+      ? `Partial grounding — ${memoryHits} memory hit(s), ${agents.size} agent(s).`
+      : `Low grounding — verify before acting.`;
+  return { level, score, reason };
+}
 
 export function AIChatAgent() {
   const { session } = useAuth();
@@ -77,7 +99,8 @@ export function AIChatAgent() {
       });
       if (error) throw error;
       const assistantContent = data?.choices?.[0]?.message?.content || "I couldn't process that. Please try again.";
-      setMessages(prev => [...prev, { role: "assistant", content: assistantContent, trace: data?.trace ?? [] }]);
+      const trace = data?.trace ?? [];
+      setMessages(prev => [...prev, { role: "assistant", content: assistantContent, trace, confidence: deriveConfidence(trace) }]);
     } catch (err: any) {
       console.error("AI chat error:", err);
       setMessages(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
@@ -149,6 +172,23 @@ export function AIChatAgent() {
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted/60 text-foreground rounded-bl-sm"}`}>
                     <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.role === "assistant" && msg.confidence && (
+                      <div className="mt-2 flex items-center gap-1.5" title={msg.confidence.reason}>
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${
+                            msg.confidence.level === "high"
+                              ? "bg-accent/15 text-accent border-accent/30"
+                              : msg.confidence.level === "med"
+                              ? "bg-primary/15 text-primary border-primary/30"
+                              : "bg-destructive/15 text-destructive border-destructive/30"
+                          }`}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {msg.confidence.level === "high" ? "High confidence" : msg.confidence.level === "med" ? "Medium confidence" : "Low — verify"}
+                          <span className="opacity-70">· {(msg.confidence.score * 100).toFixed(0)}%</span>
+                        </span>
+                      </div>
+                    )}
                     {msg.trace && msg.trace.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {msg.trace.map((t, j) => (

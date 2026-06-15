@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { FileUploadButton } from "@/components/dashboard/FileUploadButton";
+import { PlanMilestoneRow, type PlanMilestone } from "@/components/dashboard/PlanMilestoneRow";
 
 interface Project {
   id: string;
@@ -64,6 +65,7 @@ export default function ProjectsView() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [updates, setUpdates] = useState<Update[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [milestones, setMilestones] = useState<PlanMilestone[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showCreateTask, setShowCreateTask] = useState(false);
@@ -75,14 +77,16 @@ export default function ProjectsView() {
 
   const loadData = async () => {
     if (!orgId) return;
-    const [{ data: p }, { data: t }, { data: u }] = await Promise.all([
+    const [{ data: p }, { data: t }, { data: u }, { data: m }] = await Promise.all([
       supabase.from("projects").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
       supabase.from("project_tasks").select("*").eq("org_id", orgId),
       supabase.from("project_updates").select("*").eq("org_id", orgId).order("created_at", { ascending: false }),
+      supabase.from("project_milestones").select("id,name,status,target_date,project_id").eq("org_id", orgId).order("target_date", { ascending: true, nullsFirst: false }),
     ]);
     setProjects((p as Project[]) || []);
     setTasks(t || []);
     setUpdates(u || []);
+    setMilestones(((m as any[]) || []) as any);
     if (!selectedProject && p && p.length > 0) setSelectedProject(p[0].id);
   };
 
@@ -97,6 +101,7 @@ export default function ProjectsView() {
 
   const selectedTasks = tasks.filter(t => t.project_id === selectedProject);
   const selectedUpdates = updates.filter(u => u.project_id === selectedProject);
+  const selectedMilestones = (milestones as any[]).filter(m => m.project_id === selectedProject);
   const project = projects.find(p => p.id === selectedProject);
 
   const tasksByStatus = {
@@ -296,6 +301,18 @@ export default function ProjectsView() {
             </div>
           </div>
           <div className="glass-panel p-6">
+            <h3 className="text-lg font-semibold font-display mb-3">Milestones ({selectedMilestones.length})</h3>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Coordinator-proposed milestones. Accept to commit, Skip to dismiss — both are logged for the Critic.
+            </p>
+            <div className="space-y-2 mb-6">
+              {selectedMilestones.length === 0 && (
+                <p className="text-xs text-muted-foreground">No milestones yet for this project.</p>
+              )}
+              {selectedMilestones.map((m: any) => (
+                <PlanMilestoneRow key={m.id} milestone={m} onChange={loadData} />
+              ))}
+            </div>
             <h3 className="text-lg font-semibold font-display mb-4">AI Updates</h3>
             <div className="space-y-4">
               {selectedUpdates.map(u => (

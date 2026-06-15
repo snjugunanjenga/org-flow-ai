@@ -8,10 +8,10 @@ import { DEMO_PERSONAS } from "@/lib/demo-personas";
 import { useDemoLogin } from "@/hooks/use-demo-login";
 
 const subtitles = [
-  "Tracking every decision across your org",
-  "Routing critical knowledge to the right people",
-  "Detecting conflicts before they escalate",
-  "Your living source of organizational truth",
+  "Your Second Brain for real life — work, study, and everything between",
+  "Captures every decision, meeting, and message — versioned forever",
+  "Routes what matters to the people who need it — automatically",
+  "Flags conflicts and stale plans before they cost you",
 ];
 
 export function HeroSection() {
@@ -25,7 +25,7 @@ export function HeroSection() {
       <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
           <span className="inline-block px-4 py-1.5 mb-6 text-xs font-medium tracking-widest uppercase rounded-full border border-primary/30 bg-primary/10 text-primary">
-            AI-Powered Organizational Intelligence
+            Second Brain · AI Chief of Staff · USAII Brief 3
           </span>
         </motion.div>
 
