@@ -16,11 +16,12 @@
 
 ## 🔐 Demo accounts (for judges)
 
-All four logins share the password **`Demo!2026`**. Sign in at
+All demo logins share the password **`Demo!2026`** (except the Super Admin — see below). Sign in at
 [`/auth`](https://org-ai-chief-of-staff.lovable.app/auth) — no signup required.
 
 | Role | Persona | Org | Email | Plan | Where to look |
 |---|---|---|---|---|---|
+| Admin | Visionary CEO | **Apple** | `steve.jobs@apple.com` | enterprise | Graph, Projects, Conflicts, Voice notifications |
 | Member / IC | Overloaded student | Stanford CS Cohort | `student.demo@chiefofstaff.app` | free (trialing) | Overview, Notifications, Resources |
 | Manager | Cross-team PM | Northwind Product | `pm.demo@chiefofstaff.app` | pro | Projects, Graph, Oversight, Analytics |
 | Admin | Founder / leader | Lumen Robotics | `founder.demo@chiefofstaff.app` | enterprise | Teams, Agents, Calendar, Conflicts |
@@ -37,7 +38,7 @@ Full submission packet: [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md).
 
 ### 🎙️ Voice notifications + persona switcher (new)
 
-- The landing hero exposes a **4-button persona switcher** (Founder / PM / Student / Super Admin) plus a CTA on each persona card. One click signs in and lands judges in the matching mock org — `seed-personas` auto-runs on first failure.
+- The landing hero exposes a **5-button persona switcher** (Apple / Founder / PM / Student / Super Admin) plus a CTA on each persona card. One click signs in and lands judges in the matching mock org — `seed-personas` auto-runs on first failure.
 - Each notification carries an **agent voice** (ElevenLabs). The bell page now has a ▶︎ *Play voice* button per item and a *Talk to Coordinator* mic that opens a full-duplex ElevenLabs Conversational AI session.
 - Mock data includes **7 days of daily agent briefings** per persona, voice-enabled, plus seeded DMs and channel messages.
 - Voice requires the ElevenLabs connector (auto-linked, `ELEVENLABS_API_KEY`). For *Talk to Coordinator* set `ELEVENLABS_AGENT_ID` to a Conversational Agent created in your ElevenLabs dashboard.
@@ -45,6 +46,10 @@ Full submission packet: [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md).
 ### 🧠 Knowledge graph health
 
 The `graph-healthcheck` edge function pings **Neo4j** (`RETURN 1`) and **Pinecone** (`describe_index_stats`) and returns latency + status. Surfaced as a live badge in **Settings → Integrations → Knowledge graph health** (auto-refresh every 30s, click to recheck).
+
+The `graph-demo-test` edge function goes one step further — for every demo org it runs a **sample Neo4j `MATCH` query**, a **Pinecone `topK` similarity query**, and a **Postgres `graph_edges` row check**, then reports pass/fail per backend per org. Surfaced as the **"Knowledge Graph demo test"** panel at the top of `/dashboard/graph` with a one-click *Run tests* button.
+
+Voice + Coordinator UI verification: `python3 docs/demo-screenshots/voice-walkthrough.py` logs in as every demo persona, opens Notifications, and asserts the ▶︎ *Play voice* buttons and *Talk to Coordinator* affordance mount without runtime errors. Screenshots land in `docs/demo-screenshots/voice/`.
 
 #### One-shot reseed + login verification
 
