@@ -168,3 +168,10 @@ If a connection cannot be linked at run time, ingest functions fall through to a
 - HeyGen video render — pending (screenshots produced here are the inputs).
 - Stripe/Paddle billing.
 - Removing Apple/Steve Jobs demo org.
+
+## Phase 2-3 Completion Log (2026-06-15)
+- Linked Slack and Gmail via Connector Gateway → `SLACK_API_KEY` + `GOOGLE_MAIL_API_KEY` injected.
+- New edge function `connector-dispatch` routes Router-Agent notifications to Slack `chat.postMessage` or Gmail `users/me/messages/send`; falls back to `{ simulated: true }` if a connector is missing so the demo stays resilient.
+- Deno smoke tests added for `ai-agent`, `agent-ingest`, and `connector-dispatch`.
+- `.github/workflows/ci.yml` runs `bun install` + `bunx vitest run` on every PR / push to main.
+- Vitest suite green (Resources, Onboarding, ConnectorsPanel, …). Playwright persona walkthroughs remain a follow-up.
