@@ -1,89 +1,125 @@
-# Implementation Plan
 
-This plan covers six workstreams: fixing the onboarding flow, adding onboarding tests, redesigning the Knowledge Graph, building Resources tab, Platform Admin enhancements, and Multi-Tenant Architecture transformation.
+# USAII Global AI Hackathon 2026 — Submission Plan
 
----
+Target: **College Core Challenge — Brief 3: Productivity / "Second Brain" for Real Life**
+Window: June 14–21, 2026. Rubric: Technical Depth 33% · Creativity & Innovation 33% · Communication 33%.
 
-## 1. Fix the Onboarding Flow ✅
-
-- Added `OnboardingGuard` wrapper
-- Fixed `user_roles` insertion
-- Disabled back button on step 1 after org creation
-
-## 2. Onboarding Tests ✅
-
-- `src/pages/__tests__/Onboarding.test.tsx`
-- `src/components/auth/__tests__/ProtectedRoute.test.tsx`
-
-## 3. Knowledge Graph — Food-Web Visualization ✅
-
-- `src/components/graph/ForceGraph.tsx` — Canvas-based force-directed graph
-
-## 4. Resources Tab — NotebookLM-Style ✅
-
-- Database tables: resource_notebooks, resource_sources, resource_chats, resource_outputs
-- Edge function: `supabase/functions/resource-ai/index.ts`
-- Components: NotebookList, NotebookDetail, SourceUploader, SourceList, ResourceChat, NotebookGuide, ReportGenerator
-
-## 5. Platform Admin Enhancements (IN PROGRESS)
-
-### A1. Admin Role Security
-- `AdminGuard` component wrapping `/dashboard/admin` route
-- Platform admin RLS policies for cross-tenant access
-- `has_role()` security-definer function (already exists)
-
-### A2. Enhanced Admin Dashboard
-- **Analytics Tab**: Org count, user count, plan breakdown, status breakdown
-- **Organizations Tab**: List all orgs, member counts, search/filter, org detail panel
-- **Subscriptions Tab**: Inline plan/status editing
-- **Newsletters Tab**: Compose, send, delivery tracking
-- **Audit Log Tab**: Track admin actions
-
-### A3. Database Changes
-- `admin_audit_log` table with RLS
-- Add `sent_count`, `status` columns to `admin_newsletters`
-- Add `suspended_at` column to `organizations`
-- Auto-subscription trigger on org creation
-- Fix RLS: permissive policies for admin_newsletters, admin SELECT on organizations
-
-### A4. Super Admin Account
-- Email: simonnjenganjuguna@gmail.com
-- Role: admin in user_roles
-- Mock data: newsletters, audit logs
-
-## 6. Multi-Tenant Architecture Transformation (IN PROGRESS)
-
-### B1. Subscription Enforcement
-- `useSubscription` hook — fetches org subscription, returns plan/limits
-- `FeatureGate` component — plan-aware feature wrapper
-- Plan limits config: free (5 members, 1 project), pro/enterprise (unlimited)
-
-### B2. Subscription Lifecycle
-- Auto-create subscription on org INSERT (database trigger)
-- Trial expiry handling (30-day default)
-
-### B3. OrgProvider Context
-- Centralized org context replacing `useOrgId()`
-- Multi-org switching support
-- Exposes org, orgId, role, subscription
-
-### B4. Data Isolation Audit
-- Fix admin_newsletters RLS (RESTRICTIVE → add PERMISSIVE base)
-- Fix subscriptions INSERT policy
-- Add missing DELETE policies (resource_chats, direct_messages)
-- Platform admin SELECT on organizations
+Existing AI Chief of Staff product is reframed for Brief 3 ("turn complexity into clear next steps"), unfinished roadmap phases are shipped, three persona-driven demo orgs are seeded and screenshotted via Playwright, and HeyGen-ready submission assets are produced.
 
 ---
 
-## Implementation Order
+## 1. Reframe Product for USAII Brief 3
 
-1. ~~Onboarding fixes~~ ✅
-2. ~~Onboarding tests~~ ✅
-3. ~~Resources tab~~ ✅
-4. ~~Knowledge Graph~~ ✅
-5. **Database migration** — admin_audit_log, RLS fixes, triggers ← CURRENT
-6. **AdminGuard + route protection**
-7. **Enhanced AdminView** — Organizations, Audit Log tabs
-8. **OrgProvider + useSubscription** — hooks & context
-9. **FeatureGate + plan enforcement**
-10. **Documentation updates**
+- Landing hero + PersonaCards + Pricing + Footer copy → "Your second brain for life, learning & work."
+- Three persona narratives surfaced on the landing page, each linking to a demo org login.
+- README + docs intro reframed; old Hack-Nation submission preserved as `docs/SUBMISSION-HACKNATION.md`.
+
+## 2. `120x-architect-sub-agent` as a Lovable Skill
+
+Draft under `.agents/skills/120x-architect-sub-agent/`, then apply via `skills--apply_draft`. Build-time only; no runtime code.
+
+- `SKILL.md` — triggers on "plan docs", "architecture review", "hackathon submission", "120x architect". Workflow: Discover → Define → Design → Deliver → Demo.
+- `references/usaii-rubric.md` — judging weights + heuristics.
+- `references/doc-templates.md` — README/ARCHITECTURE/ROADMAP/SUBMISSION skeletons.
+- `references/demo-script.md` — 60-sec demo + 60-sec tech video shot lists.
+- `references/persona-playbook.md` — the three personas, their flows, and screenshot checklist.
+
+## 3. Three Demo Organizations (additive — keep Apple/Steve Jobs demo intact)
+
+Seeded via a new edge function `supabase/functions/seed-personas/index.ts` (idempotent, callable from Platform Admin "Seed personas" button). Medium depth: 15–25 items per surface per org.
+
+| Persona | Org | Admin login | Color | Focus |
+|---|---|---|---|---|
+| Overloaded student / IC | **Stanford CS Cohort** | `student.demo@chiefofstaff.app` / `Demo!2026` | indigo | Capture sources → grounded answers → action items |
+| Cross-team PM | **Northwind Product** | `pm.demo@chiefofstaff.app` / `Demo!2026` | emerald | Decisions, conflicts, "who needs to know" routing |
+| Founder / leader | **Lumen Robotics** | `founder.demo@chiefofstaff.app` / `Demo!2026` | amber | Daily executive brief synthesized from all signals |
+
+Per-org seed contents:
+- Stanford CS Cohort: 4 notebooks (Algorithms, ML Systems, Thesis, Interview Prep), ~20 sources (PDFs/URLs), 18 grounded chats with citations, 12 AI-generated action items, 3 teams (Coursework / Research / Career).
+- Northwind Product: 3 cross-functional teams (Eng / Design / GTM), 5 projects, 22 decisions in `topics`, 6 conflicts in `conflicts`, 18 routed notifications, 25 messages spanning teams.
+- Lumen Robotics: 4 teams (Hardware / Firmware / Ops / Finance), 6 projects with milestones, 20 meeting summaries, 15 agent_logs across all four agents, daily executive brief generated by Coordinator.
+
+Subscriptions: Stanford → free (trialing), Northwind → pro, Lumen → enterprise — also showcases plan tiers.
+
+## 4. Ship Remaining Roadmap Phases
+
+### Phase 2 — Intelligence layer (live)
+Wire `neo4j-proxy` + `pinecone-proxy` end-to-end. `ai-agent` runs a real Memory→Router→Critic→Coordinator loop with AI SDK + Lovable AI Gateway (`google/gemini-3-flash-preview`, `stepCountIs(50)`). Reasoning traces surfaced in `AIChatAgent` + `AgentsView` from `agent_logs`.
+
+### Phase 3 — Real connectors
+Slack, Gmail, Google Calendar via `standard_connectors--connect`, routed through Lovable Connector Gateway in edge functions. Minimum demo path per connector: 1 signal in → Memory extracts → appears in graph + notifications.
+
+### Phase 4 — Voice + project status AI
+OpenAI Realtime push-to-talk in `AIChatAgent`. ProjectsView weekly status auto-generated from `project_updates` + `meeting_summaries`.
+
+### Phase 5 — Quality + demo polish
+Vitest expansion (Resources, Admin, Onboarding). Playwright E2E smoke. GitHub Actions CI (lint + vitest). "Demo Mode" toggle that calls `seed-personas` and routes to a scripted tour. Mobile responsive sweep.
+
+## 5. Playwright Screenshot Suite (drives HeyGen video)
+
+Scripts under `/tmp/browser/personas/` (per browser-main-agent rules), final images committed to `docs/demo-screenshots/`.
+
+For each of the 3 demo orgs:
+1. **Login + dashboard overview** — sidebar, KPIs, recent activity.
+2. **Full persona walkthrough**
+   - Student: open notebook → upload PDF → ask grounded question → see citations → action items panel.
+   - PM: open Graph view → click conflict node → Critic reasoning → Router "who needs to know" list → notifications.
+   - Founder: Overview → Coordinator daily brief → Analytics → cross-team risks.
+3. **Reasoning panels + agent traces** — Memory / Router / Critic / Coordinator thinking UI captured mid-stream.
+
+Total: ~24 screenshots (8 per org). Stored at 1280×1800. Manifest written to `docs/demo-screenshots/manifest.json` for the HeyGen editor.
+
+## 6. HeyGen Demo Videos
+
+Two 60-second videos using the captured screenshots + screen recording of the live preview:
+- **Demo video** — three persona stories woven together, narrated by HeyGen avatar.
+- **Tech video** — architecture, multi-agent loop, RLS, connectors, knowledge graph.
+
+Scripts live in the 120x skill (`references/demo-script.md`) and final video URLs go into `docs/SUBMISSION.md`.
+
+## 7. Submission Artifacts (USAII format)
+
+Rewrite `docs/SUBMISSION.md` and regenerate `docs/1-page-report.html` for USAII:
+- Project title, Brief 3 track, undergraduate eligibility statement.
+- 150–300 word short description (Second Brain framing).
+- Structured sections: Problem · Audience · Solution · USP · Implementation · Impact.
+- Tech stack table + architecture diagram (ASCII + PNG).
+- Demo + Tech video links (HeyGen).
+- Three persona demo logins (above).
+- GitHub repo URL, live URL, zip instructions.
+- **Responsible-AI statement** — data sources, RLS isolation, citation-first chat, no PII exfiltration (USAII weighs responsible AI).
+- Devpost submission checklist.
+
+Also refresh `README.md`, `docs/ROADMAP.md`, `docs/RISKS.md`, `.lovable/plan.md`.
+
+## 8. Implementation Order
+
+```text
+1. Apply 120x-architect-sub-agent skill
+2. Reframe landing + copy (Brief 3 narrative)
+3. seed-personas edge function + 3 demo orgs + logins
+4. Phase 2 intelligence wiring (agents + Neo4j + Pinecone live)
+5. Phase 3 connectors (Slack, Gmail; Calendar polish)
+6. Phase 4 voice + project status AI
+7. Phase 5 tests, CI, demo mode, mobile sweep
+8. Playwright screenshot suite (24 shots, 3 orgs)
+9. HeyGen demo + tech videos
+10. Rewrite SUBMISSION.md + 1-page-report.html for USAII
+11. Final checklist + push to GitHub
+```
+
+## 9. Technical Notes
+
+- AI: AI SDK + Lovable AI Gateway via existing `_shared/ai-gateway.ts`. Agent loops use `stopWhen: stepCountIs(50)`.
+- Connectors: prefer `standard_connectors--connect`; Calendar stays custom OAuth.
+- DB: no schema changes needed — existing 31 tables cover seeds. Any new tables follow GRANT + RLS pattern.
+- Secrets: NEO4J_*, PINECONE_*, LOVABLE_API_KEY already set. Slack/Gmail come from connector linking.
+- Tests: Vitest units + Playwright via shell for E2E and screenshots.
+
+## 10. Out of Scope
+
+- Pivot to Brief 4 (Public Services).
+- Stripe/Paddle billing.
+- Native mobile apps.
+- Custom model fine-tuning.
+- Removing or altering the existing Apple/Steve Jobs demo org.
