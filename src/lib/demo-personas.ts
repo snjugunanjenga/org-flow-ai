@@ -13,6 +13,16 @@ export type DemoPersona = {
 
 export const DEMO_PERSONAS: DemoPersona[] = [
   {
+    slug: "apple",
+    label: "Apple — Steve Jobs",
+    org: "Apple",
+    email: "steve.jobs@apple.com",
+    password: "Demo!2026",
+    description: "Enterprise · Product launches, design reviews, full knowledge graph.",
+    accent: "border-primary/40 hover:border-primary",
+    seedFn: "seed-personas",
+  },
+  {
     slug: "founder",
     label: "Overwhelmed Founder",
     org: "Lumen Robotics",
