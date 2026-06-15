@@ -512,6 +512,8 @@ async function seedPersona(supabase: any, spec: PersonaSpec) {
     .from("resource_notebooks").select("id", { count: "exact", head: true }).eq("org_id", orgId);
   if ((msgCount ?? 0) === 0 && (nbCount ?? 0) === 0) {
     await spec.seed({ supabase, orgId, adminUserId, memberIds, daysAgo });
+    // Layer on daily voice briefings + DMs for every persona
+    await seedDailyVoiceAndMessages({ supabase, orgId, adminUserId, memberIds, daysAgo }, spec.name);
   }
 
   return { slug: spec.slug, org_id: orgId, admin_email: spec.admin.email };
