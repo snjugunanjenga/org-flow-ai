@@ -18,7 +18,7 @@ Frame: avatar full-frame for bookends, screenshot Ken-Burns for the middle.
 | A4  | 24–34 | `founder/04-agents.png`, static + fade-in callouts on each agent card                     | "Memory extracts what matters. Router decides who needs to know. Critic catches contradictions. Coordinator answers in plain English."                                    |
 | A5  | 34–44 | `pm/03-graph.png` with stack chips overlay (React · Supabase · Neo4j · Pinecone · Gemini) | "React and Supabase row-level security on the front. Neo4j for the graph. Pinecone for memory. Gemini through the Lovable AI Gateway. Production-grade, not a prototype." |
 | A6  | 44–52 | Pricing card (PNG to generate: Free / $12 / $39 per seat)                                 | "Free for students. Twelve dollars a month for solo creators. Thirty-nine per seat for cohorts."                                                                          |
-| A7  | 52–60 | Avatar + URL card `second-brain.lovable.app`                                              | "Built in seven days by a three-person team. Try it — org-flow-ai dot lovable dot app."                                                                                   |
+| A7  | 52–60 | Avatar + URL card `https://org-ai-chief-of-staff.lovable.app`                             | "Built in seven days by a three-person team. Try it — https://org-ai-chief-of-staff.lovable.app"                                                                          |
 
 Word count: ~140 words → ~58 s at HeyGen's default pace. Safe.
 
@@ -92,6 +92,6 @@ Phase 6 deliverables (confidence chip + Accept/Skip UI) must land before re-capt
 - [ ] Avatar = Daisy / Professional — or override: **\_\_**
 - [ ] Voice = Adam Conversational — or override: **\_\_**
 - [ ] Pricing line = Free / $12 / $39 per seat — or override: **\_\_**
-- [ ] URL in outro = `org-flow-ai.lovable.app` — or override: **\_\_**
+- [ ] URL in outro = `https://org-ai-chief-of-staff.lovable.app` — or override: **\_\_**
 
 Once approved I will (in order): build Phase 6 UI (chip + Accept/Skip + landing reframe), re-capture the three stale screenshots, generate the pricing + outro PNGs, then render reels via the ffmpeg compositor and stitch the 3-minute master.
