@@ -24,6 +24,19 @@
 
 Password for all demo logins: `Demo!2026`. Full submission packet: [`docs/SUBMISSION-USAII.md`](docs/SUBMISSION-USAII.md).
 
+### 🚦 Submission status (June 14–21, 2026)
+
+| Phase | Scope | Status |
+|---|---|---|
+| 1 — Foundation | 31 tables, RLS, auth, dashboard shell | ✅ shipped |
+| 2 — Intelligence | Neo4j + Pinecone + Memory→Router→Critic→Coordinator live | 🟡 wiring |
+| 3 — Connectors | Slack + Gmail (Connector Gateway), Calendar polish | 🟡 in progress |
+| 4 — Voice + Projects | OpenAI Realtime push-to-talk, AI weekly status | ⏳ pending |
+| 5 — Quality + Demo | Vitest, Playwright, CI, demo mode, mobile sweep | ⏳ pending |
+| Submission | 24 Playwright screenshots, 2 HeyGen videos, USAII packet | ⏳ pending |
+
+Build-time planning is driven by the **[`120x-architect-sub-agent`](.workspace/skills/120x-architect-sub-agent/SKILL.md)** Lovable skill (Discover → Define → Design → Deliver → Demo). Active tracker: [`.lovable/plan.md`](.lovable/plan.md). Architecture deep-dive: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ---
 
 ## 🎯 The Problem
