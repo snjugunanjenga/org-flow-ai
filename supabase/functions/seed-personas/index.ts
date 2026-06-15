@@ -238,7 +238,14 @@ async function seedNorthwind(ctx: SeedCtx) {
     { name: "GA4 Rollout", description: "Replace legacy analytics tracking.", team_name: "GTM", progress: 90, status: "active", owner_name: "PM Demo" },
   ];
   for (const p of projects) {
-    await supabase.from("projects").insert({ org_id: orgId, ...p });
+    const { data } = await supabase.from("projects").insert({ org_id: orgId, ...p }).select("id").single();
+    if (data?.id) {
+      await supabase.from("project_milestones").insert([
+        { project_id: data.id, org_id: orgId, name: `${p.name} — kickoff & scope`, status: "done", target_date: daysAgo(45).slice(0, 10) },
+        { project_id: data.id, org_id: orgId, name: `${p.name} — mid-flight review`, status: "in_progress", target_date: daysAgo(-7).slice(0, 10) },
+        { project_id: data.id, org_id: orgId, name: `${p.name} — launch readiness`, status: "pending", target_date: daysAgo(-30).slice(0, 10) },
+      ]);
+    }
   }
 
   // Decisions (topics)
