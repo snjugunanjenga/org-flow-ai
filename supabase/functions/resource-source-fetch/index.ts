@@ -163,7 +163,57 @@ Deno.serve(async (req) => {
     }).select("id").single();
     if (insErr) throw insErr;
 
-    return new Response(JSON.stringify({ ok: true, id: inserted?.id, provider: detected.provider }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Link to the knowledge graph: run Memory Agent ingest (Pinecone + topic node)
+    // then write graph edges Notebook -> Source -> Topic so the Mind Map / Graph view
+    // shows provable provenance for every decision derived from this source.
+    let topicId: string | null = null;
+    try {
+      const ingestRes = await fetch(`${supabaseUrl}/functions/v1/agent-ingest`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: auth,
+          "X-Org-Id": org_id,
+        },
+        body: JSON.stringify({
+          source: `notebook:${notebook_id}:${detected.provider}`,
+          text: `${fetched.title}\n\n${fetched.content}`.slice(0, 12_000),
+        }),
+      });
+      if (ingestRes.ok) {
+        const ij = await ingestRes.json().catch(() => ({}));
+        topicId = ij?.topic_id ?? null;
+        const sourceLabel = fetched.title.slice(0, 120);
+        const edges: Array<Record<string, unknown>> = [
+          {
+            org_id,
+            source_type: "notebook",
+            source_label: notebook_id,
+            target_type: "source",
+            target_label: sourceLabel,
+            relationship: "contains",
+          },
+        ];
+        if (topicId && ij?.memo?.title) {
+          edges.push({
+            org_id,
+            source_type: "source",
+            source_label: sourceLabel,
+            target_type: "topic",
+            target_label: ij.memo.title,
+            relationship: "evidence_for",
+            weight: 1.0,
+          });
+        }
+        await admin.from("graph_edges").insert(edges);
+      } else {
+        console.warn("agent-ingest failed", ingestRes.status, await ingestRes.text());
+      }
+    } catch (linkErr) {
+      console.warn("graph link error", linkErr);
+    }
+
+    return new Response(JSON.stringify({ ok: true, id: inserted?.id, provider: detected.provider, topic_id: topicId }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("resource-source-fetch error", e);
     return new Response(JSON.stringify({ error: (e as Error).message ?? "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
