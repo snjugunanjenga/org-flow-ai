@@ -38,6 +38,13 @@
 - [ ] Demo mode with scripted scenarios
 - [ ] Mobile responsive + PWA
 
+## Phase 6: Meeting Intelligence + Responsible AI
+See `docs/ARCHITECTURE-PLAN.md` for the vertical-sprint breakdown.
+- [ ] Connector Trust (Calendar/Meet test + auto-sync)
+- [ ] Inngest + Upstash Redis orchestration backbone
+- [ ] Meeting pipeline: summarize → embed → route → critic
+- [ ] Responsible-AI guardrails + governance log
+- [ ] Playwright E2E across 3 personas
 ## Scaling Considerations
 - Neo4j cluster for graph query throughput
 - Pinecone pod scaling for embedding volume
