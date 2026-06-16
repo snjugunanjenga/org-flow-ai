@@ -1,4 +1,4 @@
-import { FileText, Link, Upload, Pin, PinOff } from "lucide-react";
+import { FileText, Link, Upload, Pin, PinOff, FileSpreadsheet, Presentation, Cloud, Mail, HardDrive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Source } from "@/components/resources/NotebookDetail";
 
@@ -13,6 +13,23 @@ const typeIcons: Record<string, typeof FileText> = {
   text: FileText,
   url: Link,
   file: Upload,
+  gdoc: FileText,
+  gsheet: FileSpreadsheet,
+  gslides: Presentation,
+  gdrive: HardDrive,
+  sharepoint: Cloud,
+  onedrive: Cloud,
+  outlook: Mail,
+};
+
+const typeLabels: Record<string, string> = {
+  gdoc: "Google Docs",
+  gsheet: "Google Sheets",
+  gslides: "Google Slides",
+  gdrive: "Google Drive",
+  sharepoint: "SharePoint",
+  onedrive: "OneDrive",
+  outlook: "Outlook",
 };
 
 export function SourceList({ sources, pinnedIds, onTogglePin }: Props) {
@@ -40,7 +57,7 @@ export function SourceList({ sources, pinnedIds, onTogglePin }: Props) {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium truncate">{s.title}</p>
               <p className="text-[10px] text-muted-foreground">
-                {s.source_type} · {new Date(s.created_at).toLocaleDateString()}
+                {typeLabels[s.source_type] ?? s.source_type} · {new Date(s.created_at).toLocaleDateString()}
               </p>
             </div>
             <Button
