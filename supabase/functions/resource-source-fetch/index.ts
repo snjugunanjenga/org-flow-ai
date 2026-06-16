@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: auth,
-          "x-org-id": org_id,
+          "X-Org-Id": org_id,
         },
         body: JSON.stringify({
           source: `notebook:${notebook_id}:${detected.provider}`,
