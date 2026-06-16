@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Link, FileText } from "lucide-react";
+import { Upload, Link, FileText, Cloud } from "lucide-react";
 
 interface Props {
   notebookId: string;
@@ -16,10 +16,11 @@ interface Props {
 export function SourceUploader({ notebookId, orgId, onUploaded }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [mode, setMode] = useState<"file" | "text" | "url">("file");
+  const [mode, setMode] = useState<"cloud" | "file" | "text" | "url">("cloud");
   const [textContent, setTextContent] = useState("");
   const [textTitle, setTextTitle] = useState("");
   const [url, setUrl] = useState("");
+  const [cloudUrl, setCloudUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -113,23 +114,62 @@ export function SourceUploader({ notebookId, orgId, onUploaded }: Props) {
     }
   };
 
+  const handleCloudSubmit = async () => {
+    if (!cloudUrl.trim()) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("resource-source-fetch", {
+        body: { notebook_id: notebookId, org_id: orgId, url: cloudUrl.trim() },
+      });
+      if (error) throw error;
+      const provider = (data as any)?.provider ?? "source";
+      toast({ title: "Source added", description: `Imported from ${provider}` });
+      setCloudUrl("");
+      onUploaded();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Could not import", description: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="glass-panel p-4 space-y-3">
-      <div className="flex gap-2">
-        {(["file", "text", "url"] as const).map((m) => (
+      <div className="flex flex-wrap gap-2">
+        {(["cloud", "file", "text", "url"] as const).map((m) => (
           <Button
             key={m}
             variant={mode === m ? "default" : "outline"}
             size="sm"
             onClick={() => setMode(m)}
           >
+            {m === "cloud" && <Cloud className="h-3.5 w-3.5 mr-1.5" />}
             {m === "file" && <Upload className="h-3.5 w-3.5 mr-1.5" />}
             {m === "text" && <FileText className="h-3.5 w-3.5 mr-1.5" />}
             {m === "url" && <Link className="h-3.5 w-3.5 mr-1.5" />}
-            {m.charAt(0).toUpperCase() + m.slice(1)}
+            {m === "cloud" ? "Drive / SharePoint" : m.charAt(0).toUpperCase() + m.slice(1)}
           </Button>
         ))}
       </div>
+
+      {mode === "cloud" && (
+        <div className="space-y-2">
+          <Input
+            placeholder="Paste a Google Docs/Sheets/Drive, SharePoint, OneDrive or Outlook link"
+            value={cloudUrl}
+            onChange={(e) => setCloudUrl(e.target.value)}
+            className="bg-secondary/50 border-border/50"
+          />
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] text-muted-foreground">
+              Tip — keep originals in your personal or org Drive/SharePoint so updates flow into the notebook. Links must be readable by your org's connected workspace account.
+            </p>
+            <Button onClick={handleCloudSubmit} disabled={loading || !cloudUrl.trim()}>
+              {loading ? "Importing..." : "Import"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {mode === "file" && (
         <div>

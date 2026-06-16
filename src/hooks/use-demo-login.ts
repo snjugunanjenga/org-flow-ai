@@ -28,8 +28,7 @@ export function useDemoLogin() {
         toast({ variant: "destructive", title: "Demo unavailable", description: error.message });
         return;
       }
-      const dest = p.slug === "admin" ? "/dashboard/admin" : "/dashboard";
-      navigate(dest);
+      navigate("/dashboard");
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: e?.message ?? "Could not start demo." });
     } finally {

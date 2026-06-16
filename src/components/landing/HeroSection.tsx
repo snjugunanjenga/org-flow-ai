@@ -59,7 +59,7 @@ export function HeroSection() {
             </p>
             <div
               id="personas"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
             >
               {DEMO_PERSONAS.map((p, i) => {
                 const meta = PERSONA_META[p.slug] ?? PERSONA_META.apple;
