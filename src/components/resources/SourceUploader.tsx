@@ -24,6 +24,22 @@ export function SourceUploader({ notebookId, orgId, onUploaded }: Props) {
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Send the new source through the Memory Agent so it lands in Pinecone +
+  // becomes a Topic node in the knowledge graph (with provenance edges).
+  const linkToGraph = async (title: string, content: string, sourceTag: string) => {
+    try {
+      await supabase.functions.invoke("agent-ingest", {
+        body: {
+          source: `notebook:${notebookId}:${sourceTag}`,
+          text: `${title}\n\n${content}`.slice(0, 12_000),
+        },
+        headers: { "X-Org-Id": orgId },
+      });
+    } catch (err) {
+      console.warn("graph link failed", err);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -58,7 +74,8 @@ export function SourceUploader({ notebookId, orgId, onUploaded }: Props) {
         metadata: { size: file.size, type: file.type },
       });
 
-      toast({ title: "Source uploaded", description: file.name });
+      await linkToGraph(file.name, content, "file");
+      toast({ title: "Source uploaded", description: `${file.name} · linked to knowledge graph` });
       onUploaded();
     } catch (err: any) {
       toast({ variant: "destructive", title: "Upload failed", description: err.message });
@@ -80,7 +97,8 @@ export function SourceUploader({ notebookId, orgId, onUploaded }: Props) {
         content: textContent.trim(),
         metadata: {},
       });
-      toast({ title: "Text source added" });
+      await linkToGraph(textTitle.trim(), textContent.trim(), "text");
+      toast({ title: "Text source added", description: "Linked to knowledge graph" });
       setTextContent("");
       setTextTitle("");
       onUploaded();
@@ -104,7 +122,8 @@ export function SourceUploader({ notebookId, orgId, onUploaded }: Props) {
         file_url: url.trim(),
         metadata: { url: url.trim() },
       });
-      toast({ title: "URL source added" });
+      await linkToGraph(url.trim(), `[URL source: ${url.trim()}]`, "url");
+      toast({ title: "URL source added", description: "Linked to knowledge graph" });
       setUrl("");
       onUploaded();
     } catch (err: any) {
