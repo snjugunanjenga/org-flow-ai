@@ -52,14 +52,4 @@ export const DEMO_PERSONAS: DemoPersona[] = [
     accent: "border-agent-router/40 hover:border-agent-router",
     seedFn: "seed-personas",
   },
-  {
-    slug: "admin",
-    label: "Platform Super Admin",
-    org: "All organizations",
-    email: "simonnjenganjuguna@gmail.com",
-    password: "aqC!xeF2",
-    description: "Full platform oversight — audit log, newsletters, every org.",
-    accent: "border-agent-memory/40 hover:border-agent-memory",
-    seedFn: "seed-super-admin",
-  },
 ];
