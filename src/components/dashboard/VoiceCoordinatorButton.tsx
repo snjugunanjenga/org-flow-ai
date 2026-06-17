@@ -1,12 +1,12 @@
 import { useCallback, useState } from "react";
-import { useConversation } from "@elevenlabs/react";
+import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 /** Mic button that opens a full-duplex ElevenLabs voice conversation with the Coordinator agent. */
-export function VoiceCoordinatorButton() {
+function VoiceCoordinatorButtonInner() {
   const [starting, setStarting] = useState(false);
   const { toast } = useToast();
 
@@ -55,5 +55,13 @@ export function VoiceCoordinatorButton() {
         : <Mic className="h-3.5 w-3.5" />}
       {connected ? (conversation.isSpeaking ? "Agent speaking…" : "End call") : "Talk to Coordinator"}
     </Button>
+  );
+}
+
+export function VoiceCoordinatorButton() {
+  return (
+    <ConversationProvider>
+      <VoiceCoordinatorButtonInner />
+    </ConversationProvider>
   );
 }
