@@ -10,7 +10,6 @@
 
 **🏆 USAII Global AI Hackathon 2026 — College Brief 3: Productivity / Second Brain**
 
-*(Previously: 4th Hack-Nation Global AI Hackathon · Challenge 3 – OpenAI: AI Chief of Staff)*
 
 **🌐 Live Demo:** [https://org-ai-chief-of-staff.lovable.app](https://org-ai-chief-of-staff.lovable.app)
 
